@@ -190,71 +190,113 @@
             </div>
 
             <div class="glass-panel rounded-2xl p-6 md:p-8 border border-slate-700">
-                <div class="mb-6">
+                <div class="mb-8">
                     <label class="block text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Quest Title (ชื่อด่าน)</label>
-                    <input type="text" id="quiz-title" placeholder="e.g., จับคู่อุปกรณ์คอมพิวเตอร์" class="w-full bg-slate-800 border border-slate-600 text-white p-4 rounded-xl focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition font-bold text-lg shadow-inner">
+                    <input type="text" id="quiz-title" placeholder="e.g., จับคู่อุปกรณ์คอมพิวเตอร์" class="w-full bg-slate-800 border-2 border-slate-600 text-white p-4 rounded-xl focus:border-cyan-500 focus:outline-none focus:ring-0 transition font-bold text-lg shadow-inner">
                 </div>
 
-                <!-- Add Item Section (Advanced) -->
-                <div class="bg-slate-800 bg-opacity-50 p-6 rounded-xl border border-slate-700 mb-8 relative">
-                    <div class="absolute top-0 left-4 -mt-3 bg-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-full uppercase">Add Data Pair</div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-                        <!-- SIDE A -->
-                        <div class="glass-panel p-4 rounded-xl border border-slate-600">
-                            <h4 class="text-center font-bold text-gray-300 mb-3 border-b border-slate-600 pb-2">ฝั่งที่ 1 (Side A)</h4>
-                            <div class="flex bg-slate-900 rounded-lg p-1 mb-4">
-                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md active" data-side="a" data-type="text">ข้อความ</button>
-                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md" data-side="a" data-type="image">รูปภาพ</button>
-                            </div>
-                            
-                            <div id="tab-a-text" class="tab-content active">
-                                <textarea id="input-a-text" rows="3" placeholder="พิมพ์ข้อความฝั่งที่ 1..." class="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-xl focus:border-cyan-500 focus:outline-none resize-none"></textarea>
-                            </div>
-                            <div id="tab-a-image" class="tab-content">
-                                <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-500 border-dashed rounded-xl cursor-pointer hover:bg-slate-700 transition">
-                                    <i class="fa-solid fa-image text-2xl text-gray-400 mb-1"></i><span class="text-xs text-gray-400">เลือกรูปภาพ</span>
-                                    <input type="file" id="input-a-image" accept="image/*" class="hidden">
-                                </label>
-                                <img id="preview-a-image" src="" class="hidden w-full h-24 object-contain mt-2 rounded-lg bg-slate-900 border border-slate-600">
-                            </div>
-                        </div>
-
-                        <!-- SIDE B -->
-                        <div class="glass-panel p-4 rounded-xl border border-slate-600">
-                            <h4 class="text-center font-bold text-gray-300 mb-3 border-b border-slate-600 pb-2">ฝั่งที่ 2 (Side B)</h4>
-                            <div class="flex bg-slate-900 rounded-lg p-1 mb-4">
-                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md active" data-side="b" data-type="text">ข้อความ</button>
-                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md" data-side="b" data-type="image">รูปภาพ</button>
-                            </div>
-                            
-                            <div id="tab-b-text" class="tab-content active">
-                                <textarea id="input-b-text" rows="3" placeholder="พิมพ์ข้อความฝั่งที่ 2..." class="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-xl focus:border-cyan-500 focus:outline-none resize-none"></textarea>
-                            </div>
-                            <div id="tab-b-image" class="tab-content">
-                                <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-500 border-dashed rounded-xl cursor-pointer hover:bg-slate-700 transition">
-                                    <i class="fa-solid fa-image text-2xl text-gray-400 mb-1"></i><span class="text-xs text-gray-400">เลือกรูปภาพ</span>
-                                    <input type="file" id="input-b-image" accept="image/*" class="hidden">
-                                </label>
-                                <img id="preview-b-image" src="" class="hidden w-full h-24 object-contain mt-2 rounded-lg bg-slate-900 border border-slate-600">
-                            </div>
-                        </div>
+                <!-- NEW: Add Item Section (Zen & Clean) -->
+                <div class="bg-slate-900 rounded-2xl border-2 border-slate-700 mb-8 overflow-hidden shadow-lg">
+                    <div class="bg-slate-800 px-6 py-3 border-b border-slate-700 flex justify-between items-center">
+                        <h3 class="font-bold text-white tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square text-cyan-400"></i> สร้างคู่ข้อมูลใหม่
+                        </h3>
+                        <span class="text-xs text-slate-400">กรอกข้อมูลทั้งสองฝั่งแล้วกดเพิ่ม</span>
                     </div>
                     
-                    <button id="btn-add-pair" class="w-full mt-6 bg-slate-700 hover:bg-cyan-600 text-white font-bold py-4 px-4 rounded-xl border border-slate-500 hover:border-cyan-400 transition flex items-center justify-center gap-2 shadow-lg">
-                        <i class="fa-solid fa-link"></i> ผูกคู่ข้อมูลและเพิ่มลงในด่าน
-                    </button>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                            <!-- Divider icon for desktop -->
+                            <div class="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-slate-700 rounded-full items-center justify-center border-4 border-slate-900">
+                                <i class="fa-solid fa-link text-slate-400"></i>
+                            </div>
+
+                            <!-- SIDE A -->
+                            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 transition hover:border-cyan-500/50">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-cyan-300">ฝั่งซ้าย (Side A)</h4>
+                                    <!-- Segmented Control -->
+                                    <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+                                        <button class="tab-btn px-4 py-1 text-xs font-bold rounded-md active transition-colors" data-side="a" data-type="text">TEXT</button>
+                                        <button class="tab-btn px-4 py-1 text-xs font-bold rounded-md text-slate-400 transition-colors" data-side="a" data-type="image">IMAGE</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="tab-a-text" class="tab-content active">
+                                    <textarea id="input-a-text" rows="2" placeholder="พิมพ์ข้อความฝั่งซ้าย..." class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-xl focus:border-cyan-500 focus:outline-none resize-none transition text-center"></textarea>
+                                </div>
+                                <div id="tab-a-image" class="tab-content">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 bg-slate-900 border-2 border-slate-700 border-dashed rounded-xl cursor-pointer hover:border-cyan-500 hover:bg-slate-800 transition relative overflow-hidden group">
+                                        <div class="z-10 flex flex-col items-center" id="upload-ui-a">
+                                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-cyan-400 transition mb-1"></i>
+                                            <span class="text-xs text-slate-400 font-bold">คลิกเพื่ออัพโหลดรูปภาพ</span>
+                                        </div>
+                                        <input type="file" id="input-a-image" accept="image/*" class="hidden">
+                                        <img id="preview-a-image" src="" class="hidden absolute inset-0 w-full h-full object-contain bg-slate-900 z-20">
+                                        <button id="btn-remove-img-a" class="hidden absolute top-1 right-1 z-30 bg-red-500 text-white w-6 h-6 rounded-full text-xs hover:bg-red-600"><i class="fa-solid fa-times"></i></button>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- SIDE B -->
+                            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700 transition hover:border-purple-500/50">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-purple-300">ฝั่งขวา (Side B)</h4>
+                                    <!-- Segmented Control -->
+                                    <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+                                        <button class="tab-btn px-4 py-1 text-xs font-bold rounded-md active transition-colors" data-side="b" data-type="text">TEXT</button>
+                                        <button class="tab-btn px-4 py-1 text-xs font-bold rounded-md text-slate-400 transition-colors" data-side="b" data-type="image">IMAGE</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="tab-b-text" class="tab-content active">
+                                    <textarea id="input-b-text" rows="2" placeholder="พิมพ์ข้อความฝั่งขวา ที่สอดคล้องกับฝั่งซ้าย..." class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-xl focus:border-purple-500 focus:outline-none resize-none transition text-center"></textarea>
+                                </div>
+                                <div id="tab-b-image" class="tab-content">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 bg-slate-900 border-2 border-slate-700 border-dashed rounded-xl cursor-pointer hover:border-purple-500 hover:bg-slate-800 transition relative overflow-hidden group">
+                                        <div class="z-10 flex flex-col items-center" id="upload-ui-b">
+                                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-purple-400 transition mb-1"></i>
+                                            <span class="text-xs text-slate-400 font-bold">คลิกเพื่ออัพโหลดรูปภาพ</span>
+                                        </div>
+                                        <input type="file" id="input-b-image" accept="image/*" class="hidden">
+                                        <img id="preview-b-image" src="" class="hidden absolute inset-0 w-full h-full object-contain bg-slate-900 z-20">
+                                        <button id="btn-remove-img-b" class="hidden absolute top-1 right-1 z-30 bg-red-500 text-white w-6 h-6 rounded-full text-xs hover:bg-red-600"><i class="fa-solid fa-times"></i></button>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="btn-add-pair" class="w-full mt-6 bg-slate-700 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 border border-slate-600 hover:border-cyan-400 shadow-lg">
+                            <i class="fa-solid fa-plus-circle"></i> ยืนยันเพิ่มคู่ข้อมูลนี้
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Items List -->
+                <!-- NEW: Items List (Table Style) -->
                 <div>
-                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                        <h3 class="font-bold text-gray-300">DATA POOL (คู่ข้อมูลที่สร้างแล้ว)</h3>
-                        <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(147,51,234,0.5)]"><span id="item-count">0</span> PAIRS</span>
+                    <div class="flex justify-between items-end mb-3">
+                        <h3 class="font-bold text-gray-300 flex items-center gap-2">
+                            <i class="fa-solid fa-database text-slate-400"></i> ข้อมูลในด่านนี้
+                        </h3>
+                        <span class="bg-slate-800 border border-slate-600 text-cyan-400 px-3 py-1 rounded-lg text-sm font-bold"><span id="item-count">0</span> PAIRS</span>
                     </div>
-                    <div id="items-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        <div class="text-center text-slate-500 py-8 border-2 border-dashed border-slate-700 rounded-xl" id="empty-list-msg">
-                            <i class="fa-solid fa-box-open text-4xl mb-2"></i><br>ยังไม่มีข้อมูลในการ์ด
+                    
+                    <div class="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
+                        <!-- Table Header -->
+                        <div class="grid grid-cols-[3rem_1fr_2rem_1fr_3rem] gap-2 bg-slate-800 p-3 border-b border-slate-700 text-xs font-bold text-slate-400 text-center uppercase tracking-wider">
+                            <div>No.</div>
+                            <div>Side A</div>
+                            <div></div>
+                            <div>Side B</div>
+                            <div>Action</div>
+                        </div>
+                        
+                        <!-- Table Body -->
+                        <div id="items-list" class="max-h-64 overflow-y-auto">
+                            <div class="text-center text-slate-500 py-10" id="empty-list-msg">
+                                <i class="fa-solid fa-inbox text-4xl mb-3 opacity-50"></i><br>ยังไม่มีข้อมูล<br><span class="text-xs">กรอกข้อมูลด้านบนเพื่อเริ่มสร้างด่าน</span>
+                            </div>
+                            <!-- Rows injected here -->
                         </div>
                     </div>
                 </div>
@@ -672,23 +714,38 @@
 
         let currentInput = { a: {type: 'text', content: null}, b: {type: 'text', content: null} };
 
-        // Handle Tabs
+        // Handle Tabs (Segmented Control style)
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 sfx.click();
-                const side = e.target.dataset.side; const type = e.target.dataset.type;
+                const side = e.target.dataset.side; 
+                const type = e.target.dataset.type;
                 currentInput[side].type = type;
-                // Update buttons
-                document.querySelectorAll(`.tab-btn[data-side="${side}"]`).forEach(b => b.classList.remove('active', 'bg-cyan-500', 'text-black'));
-                e.target.classList.add('active'); e.target.style.backgroundColor = '#06b6d4'; e.target.style.color = 'black';
+                
+                // Update buttons visually
+                document.querySelectorAll(`.tab-btn[data-side="${side}"]`).forEach(b => {
+                    b.classList.remove('active', 'bg-slate-700', 'text-white', 'shadow');
+                    b.classList.add('text-slate-400');
+                });
+                
+                e.target.classList.add('active', 'bg-slate-700', 'text-white', 'shadow');
+                e.target.classList.remove('text-slate-400');
+                
                 // Update content visibility
                 document.getElementById(`tab-${side}-text`).classList.remove('active');
                 document.getElementById(`tab-${side}-image`).classList.remove('active');
                 document.getElementById(`tab-${side}-${type}`).classList.add('active');
             });
         });
+        
+        // Initialize active tabs visually
+        document.querySelectorAll('.tab-btn.active').forEach(b => {
+            b.classList.add('bg-slate-700', 'text-white', 'shadow');
+            b.classList.remove('text-slate-400');
+        });
 
-        // Handle Image Uploads
+        // Handle Image Uploads & Previews
         ['a', 'b'].forEach(side => {
             document.getElementById(`input-${side}-image`).addEventListener('change', (e) => {
                 const file = e.target.files[0];
@@ -697,13 +754,30 @@
                         currentInput[side].content = base64;
                         document.getElementById(`preview-${side}-image`).src = base64;
                         document.getElementById(`preview-${side}-image`).classList.remove('hidden');
+                        document.getElementById(`upload-ui-${side}`).classList.add('hidden');
+                        document.getElementById(`btn-remove-img-${side}`).classList.remove('hidden');
                     });
                 }
             });
+
+            // Handle remove image button inside upload zone
+            document.getElementById(`btn-remove-img-${side}`).addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent triggering label click
+                sfx.unmatch();
+                clearImageInput(side);
+            });
         });
 
+        function clearImageInput(side) {
+            document.getElementById(`input-${side}-image`).value = '';
+            document.getElementById(`preview-${side}-image`).src = '';
+            document.getElementById(`preview-${side}-image`).classList.add('hidden');
+            document.getElementById(`upload-ui-${side}`).classList.remove('hidden');
+            document.getElementById(`btn-remove-img-${side}`).classList.add('hidden');
+            if(currentInput[side].type === 'image') currentInput[side].content = null;
+        }
+
         document.getElementById('btn-add-pair').addEventListener('click', () => {
-            sfx.click();
             // Collect Text data if active
             ['a', 'b'].forEach(side => {
                 if(currentInput[side].type === 'text') {
@@ -711,7 +785,12 @@
                 }
             });
 
-            if(!currentInput.a.content || !currentInput.b.content) { showAlert("MISSING DATA", "กรุณาใส่ข้อมูลให้ครบทั้งสองฝั่ง", true); return; }
+            if(!currentInput.a.content || !currentInput.b.content) { 
+                showAlert("MISSING DATA", "กรุณาใส่ข้อมูลให้ครบทั้งสองฝั่งก่อนกดยืนยัน", true); 
+                return; 
+            }
+
+            sfx.click();
 
             // Deep copy to save
             createdPairs.push({
@@ -722,37 +801,72 @@
 
             renderCreatedPairs();
             
-            // Reset forms
+            // Visual Feedback & Reset (Zen State)
+            const btn = document.getElementById('btn-add-pair');
+            const originalHTML = btn.innerHTML;
+            const originalClasses = btn.className;
+            
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> เพิ่มสำเร็จ!`;
+            btn.className = "w-full mt-6 bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(22,163,74,0.5)]";
+            
+            // Reset forms cleanly
             ['a', 'b'].forEach(side => {
                 document.getElementById(`input-${side}-text`).value = '';
-                document.getElementById(`input-${side}-image`).value = '';
-                document.getElementById(`preview-${side}-image`).classList.add('hidden');
+                clearImageInput(side);
                 currentInput[side].content = null;
             });
+            
+            // Focus back to Side A text for rapid entry if it's text mode
+            if(currentInput.a.type === 'text') {
+                document.getElementById('input-a-text').focus();
+            }
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.className = originalClasses;
+            }, 1500);
         });
 
         function renderCreatedPairs() {
-            const list = document.getElementById('items-list'); list.innerHTML = '';
+            const list = document.getElementById('items-list'); 
+            list.innerHTML = '';
             document.getElementById('item-count').innerText = createdPairs.length;
-            if(createdPairs.length === 0) { document.getElementById('empty-list-msg').classList.remove('hidden'); return; }
+            
+            if(createdPairs.length === 0) { 
+                document.getElementById('empty-list-msg').classList.remove('hidden'); 
+                return; 
+            }
+            
             document.getElementById('empty-list-msg').classList.add('hidden');
 
-            const renderContent = (data) => data.type === 'text' ? `<span class="text-sm truncate w-24">${data.content}</span>` : `<img src="${data.content}" class="w-10 h-10 object-cover rounded border border-slate-600">`;
+            const renderContent = (data) => {
+                if(data.type === 'text') {
+                    return `<div class="text-sm font-semibold truncate px-2 text-slate-300">${data.content}</div>`;
+                } else {
+                    return `<div class="flex justify-center"><img src="${data.content}" class="h-10 w-auto rounded border border-slate-600 bg-slate-800 object-contain"></div>`;
+                }
+            };
 
             createdPairs.forEach((pair, idx) => {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-3 bg-slate-900 border border-slate-700 rounded-xl animate-pop-in";
-                div.innerHTML = `
-                    <div class="flex items-center gap-3 w-full overflow-hidden pr-2">
-                        <span class="font-black text-slate-500 w-4">${idx+1}.</span>
-                        <div class="flex-1 bg-slate-800 p-2 rounded flex justify-center">${renderContent(pair.a)}</div>
-                        <i class="fa-solid fa-link text-cyan-500 text-xs"></i>
-                        <div class="flex-1 bg-slate-800 p-2 rounded flex justify-center">${renderContent(pair.b)}</div>
+                const row = document.createElement('div');
+                // Table Row styling
+                row.className = "grid grid-cols-[3rem_1fr_2rem_1fr_3rem] gap-2 items-center p-3 border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors animate-pop-in";
+                row.innerHTML = `
+                    <div class="text-center text-slate-500 font-mono font-bold">${idx+1}</div>
+                    <div class="overflow-hidden text-center">${renderContent(pair.a)}</div>
+                    <div class="text-center text-slate-600"><i class="fa-solid fa-arrow-right-arrow-left text-xs"></i></div>
+                    <div class="overflow-hidden text-center">${renderContent(pair.b)}</div>
+                    <div class="text-center">
+                        <button class="text-red-500/70 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-lg transition-colors" onclick="removePair('${pair.id}')" title="ลบคู่นี้">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     </div>
-                    <button class="text-red-500 hover:text-red-400 p-2 ml-2" onclick="removePair('${pair.id}')"><i class="fa-solid fa-trash-can"></i></button>
                 `;
-                list.appendChild(div);
+                list.appendChild(row);
             });
+            
+            // Auto scroll to bottom of list
+            list.scrollTop = list.scrollHeight;
         }
         window.removePair = (id) => { sfx.unmatch(); createdPairs = createdPairs.filter(p => p.id !== id); renderCreatedPairs(); };
 
