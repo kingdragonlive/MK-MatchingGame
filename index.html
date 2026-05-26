@@ -1,0 +1,102 @@
+<!-- ... existing code ... -->
+</head>
+<body class="min-h-screen text-gray-800 flex flex-col">
+
+    <!-- Site Password Overlay -->
+    <div id="site-password-overlay" class="fixed inset-0 bg-slate-800 bg-opacity-95 flex flex-col items-center justify-center z-[100] hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center mx-4 transform transition-all">
+            <i class="fa-solid fa-lock text-5xl text-indigo-500 mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">ระบบผู้สอน</h2>
+            <p class="text-gray-500 mb-6">กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน</p>
+            <input type="password" id="site-password-input" placeholder="รหัสผ่าน" class="w-full p-4 border-2 border-gray-200 rounded-xl mb-2 focus:border-indigo-500 focus:ring-0 text-center text-lg outline-none transition">
+            <p id="password-error" class="text-red-500 text-sm mb-4 hidden">รหัสผ่านไม่ถูกต้อง</p>
+            <button id="btn-unlock-site" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg text-lg">
+                เข้าสู่ระบบ
+            </button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+<!-- ... existing code ... -->
+```
+
+```javascript:MatchGameQuiz:index.html
+<!-- ... existing code ... -->
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Variables
+        const SITE_PASSWORD = "admin"; // ตั้งค่ารหัสผ่านเข้าเว็บที่นี่
+        const appId = 'matching-game-c02e0'; // อัปเดตให้ตรงกับ Project ID เพื่อความชัดเจน
+        
+        const firebaseConfig = {
+<!-- ... existing code ... -->
+```
+
+```javascript:MatchGameQuiz:index.html
+<!-- ... existing code ... -->
+            scores: {
+                title: document.getElementById('score-quiz-title'),
+                tableBody: document.getElementById('scores-table-body'),
+                noScoresMsg: document.getElementById('no-scores-msg'),
+                backBtn: document.getElementById('btn-back-to-quiz')
+            },
+            password: {
+                overlay: document.getElementById('site-password-overlay'),
+                input: document.getElementById('site-password-input'),
+                btn: document.getElementById('btn-unlock-site'),
+                error: document.getElementById('password-error')
+            }
+        };
+
+        function showAlert(title, message, isError = false) {
+<!-- ... existing code ... -->
+```
+
+```javascript:MatchGameQuiz:index.html
+<!-- ... existing code ... -->
+        ui.scores.backBtn.addEventListener('click', () => {
+            showView('teacher');
+            // Scroll back to share section
+            ui.teacher.shareSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Password Unlock Logic
+        ui.password.btn.addEventListener('click', () => {
+            const pwd = ui.password.input.value;
+            if (pwd === SITE_PASSWORD) {
+                sessionStorage.setItem('site_unlocked', 'true');
+                ui.password.overlay.classList.add('hidden');
+                initApp();
+            } else {
+                ui.password.error.classList.remove('hidden');
+                ui.password.input.value = '';
+                ui.password.input.focus();
+            }
+        });
+
+        ui.password.input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') ui.password.btn.click();
+        });
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('q');
+            
+            if (quizId) {
+                // โหมดนักเรียน (มี ?q=...) เข้าเล่นได้เลยไม่ต้องใส่รหัส เพื่อความสะดวกของนักเรียน
+                initApp();
+            } else {
+                // โหมดครู (หน้าหลัก) ต้องตรวจสอบรหัสผ่าน
+                const isUnlocked = sessionStorage.getItem('site_unlocked');
+                if (isUnlocked === 'true') {
+                    initApp();
+                } else {
+                    ui.password.overlay.classList.remove('hidden');
+                    toggleLoading(false); // ปิดหน้าจอโหลดเพื่อแสดงรหัสผ่าน
+                }
+            }
+        });
+
+    </script>
+<!-- ... existing code ... -->
