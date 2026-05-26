@@ -126,6 +126,19 @@
         </div>
     </div>
 
+    <!-- Custom Confirm Modal -->
+    <div id="custom-confirm" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="glass-panel rounded-2xl p-8 max-w-sm w-full mx-4 transform transition-all border-t-4 border-t-red-500 animate-pop-in text-center">
+            <i class="fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-4 animate-pulse"></i>
+            <h3 class="text-xl font-bold mb-2 text-white">ยืนยันการทำลาย?</h3>
+            <p class="text-gray-400 mb-6">คุณแน่ใจหรือไม่ที่จะลบด่านนี้? ข้อมูลจะถูกลบทิ้งอย่างถาวรและกู้คืนไม่ได้</p>
+            <div class="flex gap-4">
+                <button id="confirm-cancel" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition border border-slate-500">ยกเลิก</button>
+                <button id="confirm-ok" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition shadow-[0_0_15px_rgba(220,38,38,0.4)]">ลบทิ้ง</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-90 flex flex-col items-center justify-center z-50 backdrop-blur-md">
         <div class="relative w-24 h-24">
@@ -184,8 +197,8 @@
         <div id="view-teacher-create" class="hidden space-y-6 animate-pop-in">
             <div class="flex justify-between items-center mb-2">
                 <div>
-                    <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">QUEST BUILDER</h2>
-                    <p class="text-gray-400">สร้างด่านทดสอบใหม่</p>
+                    <h2 id="builder-title" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">QUEST BUILDER</h2>
+                    <p id="builder-subtitle" class="text-gray-400">สร้างด่านทดสอบใหม่</p>
                 </div>
             </div>
 
@@ -528,6 +541,8 @@
 
         let currentQuizData = null;
         let createdPairs = [];
+        let myQuizzesList = []; // Store library quizzes for editing
+        let currentEditingQuizId = null; // Track if we are editing an existing quiz
         // Structure for createdPairs: { id: string, a: {type: 'text'|'image', content: string}, b: {type: 'text'|'image', content: string} }
         
         // Game Engine State
@@ -607,6 +622,11 @@
             }
         }
 
+        // Custom Confirm logic
+        let deleteCallback = null;
+        document.getElementById('confirm-cancel').addEventListener('click', () => { sfx.click(); document.getElementById('custom-confirm').classList.add('hidden'); });
+        document.getElementById('confirm-ok').addEventListener('click', () => { sfx.click(); if(deleteCallback) deleteCallback(); document.getElementById('custom-confirm').classList.add('hidden'); });
+
         function toggleLoading(show) { show ? ui.loading.classList.remove('hidden') : setTimeout(()=>ui.loading.classList.add('hidden'), 300); }
         function generateId() { return Math.random().toString(36).substr(2, 9); }
         function shuffleArray(array) { let cur = array.length; while(0!==cur){ let rand=Math.floor(Math.random()*cur); cur--; let tmp=array[cur]; array[cur]=array[rand]; array[rand]=tmp;} return array; }
@@ -653,9 +673,21 @@
         });
         document.getElementById('teacher-password').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('btn-login-teacher').click(); });
 
+        // Reset builder when clicking "Create New"
+        function resetBuilderState() {
+            currentEditingQuizId = null;
+            document.getElementById('quiz-title').value = '';
+            createdPairs = [];
+            renderCreatedPairs();
+            document.getElementById('builder-title').innerText = "QUEST BUILDER";
+            document.getElementById('builder-subtitle').innerText = "สร้างด่านทดสอบใหม่";
+            document.getElementById('share-section').classList.add('hidden');
+            resetInputForms();
+        }
+
         ui.nav.lib.addEventListener('click', () => { sfx.click(); loadTeacherLibrary(); });
-        ui.nav.create.addEventListener('click', () => { sfx.click(); showView('teacherCreate'); });
-        document.getElementById('btn-goto-create').addEventListener('click', () => { sfx.click(); showView('teacherCreate'); });
+        ui.nav.create.addEventListener('click', () => { sfx.click(); resetBuilderState(); showView('teacherCreate'); });
+        document.getElementById('btn-goto-create').addEventListener('click', () => { sfx.click(); resetBuilderState(); showView('teacherCreate'); });
 
         async function loadTeacherLibrary() {
             showView('teacherLib'); toggleLoading(true);
@@ -670,6 +702,7 @@
                 qSnapshot.forEach(doc => { const d = doc.data(); if(d.teacherId === currentUserId) myQuizzes.push({id: doc.id, ...d}); });
                 
                 myQuizzes.sort((a,b) => (b.createdAt?.toMillis()||0) - (a.createdAt?.toMillis()||0));
+                myQuizzesList = myQuizzes;
 
                 if(myQuizzes.length === 0) { emptyMsg.classList.remove('hidden'); }
                 else {
@@ -681,17 +714,23 @@
                         card.innerHTML = `
                             <div>
                                 <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-xl font-bold text-white truncate pr-2">${q.title}</h3>
+                                    <h3 class="text-xl font-bold text-white pr-2 leading-tight">${q.title}</h3>
                                     <span class="bg-slate-800 text-xs text-gray-400 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">${dateStr}</span>
                                 </div>
                                 <p class="text-sm text-gray-400 mb-4"><i class="fa-solid fa-layer-group text-purple-400 mr-1"></i> ${q.items.length} Pairs</p>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 mt-auto">
-                                <button onclick="copyQuizLink('${q.id}')" class="bg-slate-800 hover:bg-cyan-900 border border-slate-600 hover:border-cyan-500 text-white py-2 rounded-lg text-sm transition font-bold">
-                                    <i class="fa-solid fa-link"></i> Copy Link
+                            <div class="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-slate-700/50">
+                                <button onclick="copyQuizLink('${q.id}')" class="bg-slate-800 hover:bg-cyan-900 border border-slate-600 hover:border-cyan-500 text-white py-2 rounded-lg text-sm transition font-bold flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-link"></i> Link
                                 </button>
-                                <button onclick="viewScores('${q.id}', '${q.title}')" class="bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-sm transition font-bold shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                                <button onclick="viewScores('${q.id}', '${q.title}')" class="bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-sm transition font-bold shadow-[0_0_10px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-chart-simple"></i> Scores
+                                </button>
+                                <button onclick="editQuiz('${q.id}')" class="bg-yellow-600 hover:bg-yellow-500 text-white py-2 rounded-lg text-sm transition font-bold shadow-[0_0_10px_rgba(202,138,4,0.4)] flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-pen"></i> แก้ไข
+                                </button>
+                                <button onclick="confirmDeleteQuiz('${q.id}')" class="bg-red-600 hover:bg-red-500 text-white py-2 rounded-lg text-sm transition font-bold shadow-[0_0_10px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-trash"></i> ลบทิ้ง
                                 </button>
                             </div>
                         `;
@@ -711,6 +750,40 @@
         }
 
         window.viewScores = function(quizId, title) { sfx.click(); loadLeaderboard(quizId, title); }
+
+        window.editQuiz = function(quizId) {
+            sfx.click();
+            const quiz = myQuizzesList.find(q => q.id === quizId);
+            if(!quiz) return;
+
+            currentEditingQuizId = quizId;
+            document.getElementById('quiz-title').value = quiz.title;
+            createdPairs = JSON.parse(JSON.stringify(quiz.items)); // Deep copy to prevent reference mutation
+            renderCreatedPairs();
+            resetInputForms();
+
+            // Update Header texts
+            document.getElementById('builder-title').innerText = "EDIT QUEST";
+            document.getElementById('builder-subtitle').innerText = "แก้ไขข้อมูลด่านทดสอบ";
+            document.getElementById('share-section').classList.add('hidden');
+
+            showView('teacherCreate');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.confirmDeleteQuiz = function(quizId) {
+            sfx.unmatch();
+            deleteCallback = async () => {
+                toggleLoading(true);
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId));
+                    showAlert("DELETED!", "ลบด่านทดสอบเรียบร้อยแล้ว");
+                    loadTeacherLibrary(); // Refresh
+                } catch(e) { showAlert("ERROR", "ไม่สามารถลบข้อมูลได้", true); }
+                finally { toggleLoading(false); }
+            };
+            document.getElementById('custom-confirm').classList.remove('hidden');
+        }
 
         let currentInput = { a: {type: 'text', content: null}, b: {type: 'text', content: null} };
 
@@ -768,6 +841,37 @@
             });
         });
 
+        function resetInputForms() {
+            ['a', 'b'].forEach(side => {
+                // Clear text
+                document.getElementById(`input-${side}-text`).value = '';
+                // Clear image
+                clearImageInput(side);
+                
+                // Force state and UI back to 'text'
+                currentInput[side].type = 'text';
+                currentInput[side].content = null;
+                
+                // Reset Tabs UI
+                document.querySelectorAll(`.tab-btn[data-side="${side}"]`).forEach(b => {
+                    if(b.dataset.type === 'text') {
+                        b.classList.add('active', 'bg-slate-700', 'text-white', 'shadow');
+                        b.classList.remove('text-slate-400');
+                    } else {
+                        b.classList.remove('active', 'bg-slate-700', 'text-white', 'shadow');
+                        b.classList.add('text-slate-400');
+                    }
+                });
+                
+                // Switch visible panes
+                document.getElementById(`tab-${side}-text`).classList.add('active');
+                document.getElementById(`tab-${side}-image`).classList.remove('active');
+            });
+            
+            // Focus on Side A Text for rapid input
+            document.getElementById('input-a-text').focus();
+        }
+
         function clearImageInput(side) {
             document.getElementById(`input-${side}-image`).value = '';
             document.getElementById(`preview-${side}-image`).src = '';
@@ -809,17 +913,8 @@
             btn.innerHTML = `<i class="fa-solid fa-check"></i> เพิ่มสำเร็จ!`;
             btn.className = "w-full mt-6 bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(22,163,74,0.5)]";
             
-            // Reset forms cleanly
-            ['a', 'b'].forEach(side => {
-                document.getElementById(`input-${side}-text`).value = '';
-                clearImageInput(side);
-                currentInput[side].content = null;
-            });
-            
-            // Focus back to Side A text for rapid entry if it's text mode
-            if(currentInput.a.type === 'text') {
-                document.getElementById('input-a-text').focus();
-            }
+            // Cleanly reset entire form blocks
+            resetInputForms();
 
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
@@ -878,19 +973,26 @@
 
             toggleLoading(true);
             try {
-                const quizId = generateId() + generateId();
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId), {
-                    teacherId: currentUserId, title: title, items: createdPairs, createdAt: serverTimestamp()
-                });
+                const quizId = currentEditingQuizId || (generateId() + generateId());
+                const quizData = {
+                    teacherId: currentUserId, title: title, items: createdPairs, 
+                    createdAt: currentEditingQuizId ? (myQuizzesList.find(q=>q.id===quizId)?.createdAt || serverTimestamp()) : serverTimestamp()
+                };
+
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId), quizData);
                 
-                const url = `${window.location.origin}${window.location.pathname}?q=${quizId}`;
-                document.getElementById('share-link').value = url;
-                document.getElementById('share-section').classList.remove('hidden');
-                document.getElementById('share-section').scrollIntoView({behavior: 'smooth'});
-                
-                // Reset creation state for next time
-                createdPairs = []; renderCreatedPairs(); document.getElementById('quiz-title').value = '';
-            } catch(e) { showAlert("DB ERROR", "บันทึกไม่ได้ ตรวจสอบ Rules", true); }
+                if (currentEditingQuizId) {
+                    showAlert("UPDATED!", "บันทึกการแก้ไขเควสเรียบร้อยแล้ว");
+                    loadTeacherLibrary(); // Return to library on update
+                } else {
+                    const url = `${window.location.origin}${window.location.pathname}?q=${quizId}`;
+                    document.getElementById('share-link').value = url;
+                    document.getElementById('share-section').classList.remove('hidden');
+                    document.getElementById('share-section').scrollIntoView({behavior: 'smooth'});
+                    // Reset creation state for next time
+                    resetBuilderState();
+                }
+            } catch(e) { console.error(e); showAlert("DB ERROR", "บันทึกไม่ได้ ตรวจสอบ Rules", true); }
             finally { toggleLoading(false); }
         });
 
