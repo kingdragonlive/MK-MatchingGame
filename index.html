@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matching Game: E-Sports Edition</title>
+    <title>Matching Quest: Ultimate Edition</title>
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Canvas Confetti สำหรับเอฟเฟกต์ตอนชนะ -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <script>
@@ -18,16 +17,20 @@
                     colors: {
                         gaming: { dark: '#0b0c10', card: '#1f2833', neon: '#66fcf1', accent: '#45a29e', light: '#c5c6c7' }
                     },
-                    fontFamily: { prompt: ['Prompt', 'sans-serif'] },
+                    fontFamily: { prompt: ['Prompt', 'sans-serif'], mono: ['Courier New', 'monospace'] },
                     animation: {
                         'float': 'float 3s ease-in-out infinite',
                         'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'fire': 'fire 1s ease-in-out infinite alternate'
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
                         'pulse-glow': { '0%, 100%': { opacity: 1, filter: 'brightness(1)' }, '50%': { opacity: .8, filter: 'brightness(1.5)' } },
-                        popIn: { '0%': { opacity: 0, transform: 'scale(0.8)' }, '100%': { opacity: 1, transform: 'scale(1)' } }
+                        popIn: { '0%': { opacity: 0, transform: 'scale(0.8)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+                        shake: { '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' }, '20%, 80%': { transform: 'translate3d(2px, 0, 0)' }, '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' }, '40%, 60%': { transform: 'translate3d(4px, 0, 0)' } },
+                        fire: { '0%': { textShadow: '0 0 4px #facc15, 0 0 10px #f59e0b, 0 0 20px #ea580c' }, '100%': { textShadow: '0 0 2px #facc15, 0 0 5px #f59e0b, 0 0 10px #ea580c' } }
                     }
                 }
             }
@@ -37,7 +40,7 @@
     <style>
         body { 
             font-family: 'Prompt', sans-serif; 
-            background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
             color: #e2e8f0;
             min-height: 100vh;
             overflow-x: hidden;
@@ -62,7 +65,7 @@
         }
         .match-card::before {
             content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
             transform: skewX(-25deg); transition: 0.5s;
         }
         .match-card:hover {
@@ -74,11 +77,12 @@
 
         /* States */
         .selected-card {
-            border-color: #0ea5e9;
-            box-shadow: 0 0 20px rgba(14, 165, 233, 0.5), inset 0 0 10px rgba(14, 165, 233, 0.3);
-            transform: scale(1.05);
+            border-color: #0ea5e9 !important;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.5), inset 0 0 10px rgba(14, 165, 233, 0.3) !important;
+            transform: scale(1.05) !important;
             z-index: 10;
         }
+        .matched-card { pointer-events: none; opacity: 0.7; }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
@@ -86,21 +90,27 @@
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* Neon Text */
         .text-neon { text-shadow: 0 0 10px currentColor; }
+        
+        /* Tab Styles */
+        .tab-btn.active { background-color: #06b6d4; color: black; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <!-- Navbar -->
     <nav class="glass-panel border-b border-gray-700 p-4 sticky top-0 z-40">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 text-neon">
+            <h1 class="text-2xl font-black flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 text-neon tracking-wider">
                 <i class="fa-solid fa-gamepad text-cyan-400"></i> MATCHING QUEST
             </h1>
-            <div id="nav-actions">
-                <button id="btn-home" class="hidden hover:bg-slate-700 border border-slate-600 px-4 py-2 rounded-lg transition font-semibold text-sm">
-                    <i class="fa-solid fa-shield-halved"></i> ห้องควบคุมครู
+            <div id="nav-actions" class="flex gap-2">
+                <button id="btn-lib-nav" class="hidden hover:bg-purple-900 border border-purple-500 text-purple-300 px-4 py-2 rounded-lg transition font-bold text-sm shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                    <i class="fa-solid fa-book-journal-whills"></i> คลังเควส
+                </button>
+                <button id="btn-create-nav" class="hidden hover:bg-cyan-900 border border-cyan-500 text-cyan-300 px-4 py-2 rounded-lg transition font-bold text-sm shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                    <i class="fa-solid fa-plus"></i> สร้างเควสใหม่
                 </button>
             </div>
         </div>
@@ -117,7 +127,7 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-90 flex flex-col items-center justify-center z-40 backdrop-blur-md">
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 bg-opacity-90 flex flex-col items-center justify-center z-50 backdrop-blur-md">
         <div class="relative w-24 h-24">
             <div class="absolute inset-0 border-4 border-transparent border-t-cyan-500 rounded-full animate-spin"></div>
             <div class="absolute inset-2 border-4 border-transparent border-r-purple-500 rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
@@ -130,11 +140,11 @@
         
         <!-- View 0: Teacher Login -->
         <div id="view-teacher-login" class="hidden max-w-md mx-auto mt-12 animate-pop-in">
-            <div class="glass-panel rounded-3xl p-8 text-center border-t-4 border-purple-500 relative overflow-hidden">
+            <div class="glass-panel rounded-3xl p-8 text-center border-t-4 border-purple-500 relative overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.2)]">
                 <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
                 <i class="fa-solid fa-user-shield text-6xl text-purple-400 mb-6 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"></i>
                 <h2 class="text-3xl font-black text-white mb-2 tracking-wide">ADMIN LOGIN</h2>
-                <p class="text-gray-400 mb-8 text-sm">กรอกรหัสผ่านเพื่อเข้าสู่ระบบสร้างเควส (แบบทดสอบ)</p>
+                <p class="text-gray-400 mb-8 text-sm">ระบบจัดการคลังแบบทดสอบ</p>
                 
                 <div class="relative mb-6">
                     <i class="fa-solid fa-key absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
@@ -147,54 +157,99 @@
             </div>
         </div>
 
-        <!-- View 1: Teacher Dashboard -->
-        <div id="view-teacher" class="hidden space-y-6 animate-pop-in">
-            <div class="flex justify-between items-end mb-2">
+        <!-- View 1: Teacher Library (Dashboard) -->
+        <div id="view-teacher-lib" class="hidden space-y-6 animate-pop-in">
+            <div class="flex justify-between items-end mb-4 border-b border-slate-700 pb-4">
                 <div>
-                    <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">QUEST BUILDER</h2>
-                    <p class="text-gray-400">สร้างด่านทดสอบใหม่ให้นักเรียน</p>
+                    <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">QUEST LIBRARY</h2>
+                    <p class="text-gray-400">คลังแบบทดสอบของคุณ</p>
+                </div>
+                <button id="btn-goto-create" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] transition flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> สร้างเควสใหม่
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="quiz-library-grid">
+                <!-- Quizzes injected here -->
+            </div>
+            
+            <div id="empty-lib-msg" class="hidden text-center py-20 glass-panel rounded-2xl border-dashed border-2 border-slate-700">
+                <i class="fa-solid fa-folder-open text-6xl text-slate-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-300">ยังไม่มีเควสในคลัง</h3>
+                <p class="text-gray-500 mt-2">กดปุ่ม "สร้างเควสใหม่" เพื่อเริ่มต้น</p>
+            </div>
+        </div>
+
+        <!-- View 2: Teacher Create -->
+        <div id="view-teacher-create" class="hidden space-y-6 animate-pop-in">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">QUEST BUILDER</h2>
+                    <p class="text-gray-400">สร้างด่านทดสอบใหม่</p>
                 </div>
             </div>
 
             <div class="glass-panel rounded-2xl p-6 md:p-8 border border-slate-700">
                 <div class="mb-6">
-                    <label class="block text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Quest Title (ชื่อแบบทดสอบ)</label>
-                    <input type="text" id="quiz-title" placeholder="e.g., ด่านคำศัพท์ภาษาอังกฤษ ป.4" class="w-full bg-slate-800 border border-slate-600 text-white p-4 rounded-xl focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition font-bold text-lg">
+                    <label class="block text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Quest Title (ชื่อด่าน)</label>
+                    <input type="text" id="quiz-title" placeholder="e.g., จับคู่อุปกรณ์คอมพิวเตอร์" class="w-full bg-slate-800 border border-slate-600 text-white p-4 rounded-xl focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition font-bold text-lg shadow-inner">
                 </div>
 
-                <!-- Add Item Section -->
+                <!-- Add Item Section (Advanced) -->
                 <div class="bg-slate-800 bg-opacity-50 p-6 rounded-xl border border-slate-700 mb-8 relative">
-                    <div class="absolute top-0 left-4 -mt-3 bg-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-full uppercase">Add Data</div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">1. Upload Image (รูปภาพ)</label>
-                            <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-600 border-dashed rounded-xl cursor-pointer hover:bg-slate-700 hover:border-cyan-500 transition group">
-                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 group-hover:text-cyan-400 mb-2 transition"></i>
-                                    <p class="text-sm text-gray-400 group-hover:text-white">คลิกเพื่อเลือกไฟล์รูปภาพ</p>
-                                </div>
-                                <input type="file" id="item-image" accept="image/*" class="hidden">
-                            </label>
-                            <div id="image-preview-container" class="mt-3 hidden text-center">
-                                <img id="image-preview" src="" alt="Preview" class="h-24 w-auto rounded-lg border-2 border-cyan-500 inline-block object-cover shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                    <div class="absolute top-0 left-4 -mt-3 bg-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-full uppercase">Add Data Pair</div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                        <!-- SIDE A -->
+                        <div class="glass-panel p-4 rounded-xl border border-slate-600">
+                            <h4 class="text-center font-bold text-gray-300 mb-3 border-b border-slate-600 pb-2">ฝั่งที่ 1 (Side A)</h4>
+                            <div class="flex bg-slate-900 rounded-lg p-1 mb-4">
+                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md active" data-side="a" data-type="text">ข้อความ</button>
+                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md" data-side="a" data-type="image">รูปภาพ</button>
+                            </div>
+                            
+                            <div id="tab-a-text" class="tab-content active">
+                                <textarea id="input-a-text" rows="3" placeholder="พิมพ์ข้อความฝั่งที่ 1..." class="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-xl focus:border-cyan-500 focus:outline-none resize-none"></textarea>
+                            </div>
+                            <div id="tab-a-image" class="tab-content">
+                                <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-500 border-dashed rounded-xl cursor-pointer hover:bg-slate-700 transition">
+                                    <i class="fa-solid fa-image text-2xl text-gray-400 mb-1"></i><span class="text-xs text-gray-400">เลือกรูปภาพ</span>
+                                    <input type="file" id="input-a-image" accept="image/*" class="hidden">
+                                </label>
+                                <img id="preview-a-image" src="" class="hidden w-full h-24 object-contain mt-2 rounded-lg bg-slate-900 border border-slate-600">
                             </div>
                         </div>
-                        <div class="flex flex-col justify-between">
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-2">2. Meaning (ความหมาย)</label>
-                                <input type="text" id="item-meaning" placeholder="พิมพ์ความหมายที่นี่" class="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-xl focus:border-cyan-500 focus:outline-none mb-4">
+
+                        <!-- SIDE B -->
+                        <div class="glass-panel p-4 rounded-xl border border-slate-600">
+                            <h4 class="text-center font-bold text-gray-300 mb-3 border-b border-slate-600 pb-2">ฝั่งที่ 2 (Side B)</h4>
+                            <div class="flex bg-slate-900 rounded-lg p-1 mb-4">
+                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md active" data-side="b" data-type="text">ข้อความ</button>
+                                <button class="tab-btn w-1/2 py-2 text-sm rounded-md" data-side="b" data-type="image">รูปภาพ</button>
                             </div>
-                            <button id="btn-add-item" class="w-full bg-slate-700 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-xl border border-slate-600 hover:border-cyan-400 transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-plus"></i> เพิ่มลงในฐานข้อมูล
-                            </button>
+                            
+                            <div id="tab-b-text" class="tab-content active">
+                                <textarea id="input-b-text" rows="3" placeholder="พิมพ์ข้อความฝั่งที่ 2..." class="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-xl focus:border-cyan-500 focus:outline-none resize-none"></textarea>
+                            </div>
+                            <div id="tab-b-image" class="tab-content">
+                                <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-500 border-dashed rounded-xl cursor-pointer hover:bg-slate-700 transition">
+                                    <i class="fa-solid fa-image text-2xl text-gray-400 mb-1"></i><span class="text-xs text-gray-400">เลือกรูปภาพ</span>
+                                    <input type="file" id="input-b-image" accept="image/*" class="hidden">
+                                </label>
+                                <img id="preview-b-image" src="" class="hidden w-full h-24 object-contain mt-2 rounded-lg bg-slate-900 border border-slate-600">
+                            </div>
                         </div>
                     </div>
+                    
+                    <button id="btn-add-pair" class="w-full mt-6 bg-slate-700 hover:bg-cyan-600 text-white font-bold py-4 px-4 rounded-xl border border-slate-500 hover:border-cyan-400 transition flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-link"></i> ผูกคู่ข้อมูลและเพิ่มลงในด่าน
+                    </button>
                 </div>
 
                 <!-- Items List -->
                 <div>
                     <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                        <h3 class="font-bold text-gray-300">DATA POOL (ข้อมูลที่บันทึกแล้ว)</h3>
+                        <h3 class="font-bold text-gray-300">DATA POOL (คู่ข้อมูลที่สร้างแล้ว)</h3>
                         <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(147,51,234,0.5)]"><span id="item-count">0</span> PAIRS</span>
                     </div>
                     <div id="items-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
@@ -204,9 +259,9 @@
                     </div>
                 </div>
 
-                <div class="mt-8 text-right">
+                <div class="mt-8 text-right border-t border-slate-700 pt-6">
                     <button id="btn-save-quiz" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black py-4 px-8 rounded-xl transition transform hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.4)] text-lg">
-                        <i class="fa-solid fa-satellite-dish mr-2 animate-pulse"></i> GENERATE QUEST LINK
+                        <i class="fa-solid fa-satellite-dish mr-2 animate-pulse"></i> บันทึกและสร้างลิงก์
                     </button>
                 </div>
             </div>
@@ -221,15 +276,10 @@
                         <i class="fa-solid fa-copy"></i> COPY LINK
                     </button>
                 </div>
-                <div class="mt-6 border-t border-slate-700 pt-4">
-                     <button id="btn-view-scores-teacher" class="text-purple-400 hover:text-purple-300 font-bold hover:underline flex items-center gap-2">
-                        <i class="fa-solid fa-ranking-star"></i> เปิดดู Leaderboard ของด่านนี้
-                    </button>
-                </div>
             </div>
         </div>
 
-        <!-- View 2: Student Login -->
+        <!-- View 3: Student Login -->
         <div id="view-student-login" class="hidden max-w-md mx-auto mt-12 animate-pop-in text-center">
             <div class="mb-8 animate-float">
                 <i class="fa-solid fa-headset text-7xl text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.6)]"></i>
@@ -245,93 +295,118 @@
                 <button id="btn-start-game" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-4 px-6 rounded-xl transition transform hover:scale-105 text-xl shadow-[0_0_20px_rgba(6,182,212,0.5)] border border-cyan-400">
                     <i class="fa-solid fa-play mr-2"></i> START GAME
                 </button>
+                
+                <div class="mt-6 text-sm text-gray-400 text-left bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <div class="font-bold text-cyan-400 mb-2"><i class="fa-solid fa-circle-exclamation"></i> กติกาการให้คะแนน:</div>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>จับคู่ให้ถูกต้องเพื่อรับคะแนน</li>
+                        <li><span class="text-yellow-400">Combo:</span> ตอบถูกติดกันได้คะแนนคูณเพิ่ม</li>
+                        <li><span class="text-red-400">Mistake:</span> ตอบผิดโดนหักคะแนนและเสีย Combo</li>
+                        <li><span class="text-green-400">Time:</span> ยิ่งทำเวลาเร็วยิ่งได้โบนัสเยอะ</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <!-- View 3: Game Area -->
+        <!-- View 4: Game Area -->
         <div id="view-game" class="hidden flex flex-col h-full min-h-[75vh] animate-pop-in">
             
-            <!-- HUD -->
-            <div class="glass-panel p-4 rounded-2xl mb-6 flex justify-between items-center border border-slate-700 shadow-lg">
+            <!-- Gaming HUD -->
+            <div class="glass-panel p-3 md:p-4 rounded-2xl mb-4 flex flex-wrap justify-between items-center border border-slate-700 shadow-lg gap-2">
+                <!-- Player & Score -->
                 <div class="flex items-center gap-3">
-                    <div class="bg-slate-800 p-2 rounded-lg border border-slate-600 text-cyan-400">
-                        <i class="fa-solid fa-user-ninja"></i>
+                    <div class="bg-slate-800 p-2 md:p-3 rounded-lg border border-slate-600 text-cyan-400">
+                        <i class="fa-solid fa-user-astronaut text-xl"></i>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Player</div>
-                        <div id="display-student-name" class="font-black text-white text-lg"></div>
+                        <div id="display-student-name" class="font-black text-white text-md md:text-lg uppercase"></div>
+                        <div class="text-xs text-gray-400 font-bold tracking-wider">SCORE: <span id="hud-score" class="text-yellow-400 text-base">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Combo Meter -->
+                <div class="text-center flex-grow order-last w-full md:w-auto md:order-none">
+                    <div id="combo-display" class="text-2xl md:text-3xl font-black text-slate-600 transition-all duration-300">
+                        COMBO x<span id="hud-combo">1</span>
                     </div>
                 </div>
                 
-                <div class="text-right">
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Mission Status</div>
-                    <div class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">
-                        <span id="pairs-matched">0</span> <span class="text-slate-500">/</span> <span id="pairs-total">0</span>
+                <!-- Time & Mistakes -->
+                <div class="flex gap-4 text-right">
+                    <div class="bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">Mistakes</div>
+                        <div id="hud-mistakes" class="text-red-400 font-bold font-mono">0</div>
+                    </div>
+                    <div class="bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">Time</div>
+                        <div id="hud-time" class="text-cyan-400 font-bold font-mono">00:00</div>
                     </div>
                 </div>
             </div>
 
-            <div class="text-center mb-6">
-                <span class="bg-slate-800 border border-slate-700 text-gray-300 px-4 py-2 rounded-full text-sm font-semibold shadow-inner">
-                    <i class="fa-solid fa-crosshairs text-cyan-400 animate-pulse"></i> คลิก <span class="text-cyan-400">ภาพ</span> เพื่อจับคู่กับ <span class="text-purple-400">ข้อความ</span>
-                </span>
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 rounded-full h-2.5 mb-6 border border-slate-700">
+                <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-purple-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
 
             <!-- Game Board Grid -->
-            <div class="flex-grow grid grid-cols-2 gap-3 md:gap-8 max-w-5xl mx-auto w-full">
-                <!-- Images Column -->
-                <div class="flex flex-col gap-3 md:gap-4" id="game-images-col"></div>
-                <!-- Meanings Column -->
-                <div class="flex flex-col gap-3 md:gap-4" id="game-meanings-col"></div>
+            <div class="flex-grow grid grid-cols-2 gap-3 md:gap-6 max-w-5xl mx-auto w-full relative perspective-1000">
+                <!-- Side A Column -->
+                <div class="flex flex-col gap-3 md:gap-4" id="game-col-a"></div>
+                <!-- Side B Column -->
+                <div class="flex flex-col gap-3 md:gap-4" id="game-col-b"></div>
             </div>
 
             <!-- Fixed Bottom Submit -->
             <div class="mt-8 text-center sticky bottom-4 z-20">
-                <button id="btn-submit-game" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black py-4 px-12 rounded-full shadow-[0_0_30px_rgba(16,185,129,0.3)] transition transform hover:-translate-y-2 text-2xl border-2 border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none" disabled>
-                    SUBMIT MISSION <i class="fa-solid fa-rocket ml-2"></i>
+                <button id="btn-submit-game" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black py-4 px-12 rounded-full shadow-[0_0_30px_rgba(16,185,129,0.3)] transition transform hover:-translate-y-2 text-2xl border-2 border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hidden">
+                    MISSION COMPLETE <i class="fa-solid fa-satellite-dish ml-2 animate-pulse"></i>
                 </button>
             </div>
         </div>
 
-        <!-- View 4: Result -->
-        <div id="view-result" class="hidden max-w-md mx-auto mt-12 animate-pop-in text-center">
+        <!-- View 5: Result -->
+        <div id="view-result" class="hidden max-w-lg mx-auto mt-8 animate-pop-in text-center">
             <div class="glass-panel p-8 md:p-10 rounded-3xl border-t-8 border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.2)] relative overflow-hidden">
-                <!-- Background rays -->
                 <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-900/20 via-slate-900/0 to-transparent"></div>
                 
                 <div class="relative z-10">
-                    <div class="text-7xl text-yellow-400 mb-6 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)] animate-float">
+                    <div class="text-7xl text-yellow-400 mb-2 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)] animate-float">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
-                    <h2 class="text-4xl font-black text-white mb-2 tracking-wide uppercase">MISSION CLEARED</h2>
-                    <p class="text-gray-400 mb-8 font-semibold">รวบรวมคะแนนเสร็จสิ้น</p>
+                    <h2 class="text-4xl font-black text-white mb-6 tracking-wide uppercase">QUEST CLEARED</h2>
                     
-                    <div class="glass-panel bg-slate-900/50 rounded-2xl p-6 mb-8 border border-slate-700">
-                        <div class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-lg inline-block" id="score-result">0</div>
-                        <div class="text-3xl text-gray-500 inline-block font-bold">/ <span id="score-total">0</span></div>
+                    <div class="glass-panel bg-slate-900/80 rounded-2xl p-6 mb-6 border border-slate-700 shadow-inner">
+                        <div class="text-gray-400 font-bold mb-1 uppercase tracking-widest text-sm">Total Score</div>
+                        <div class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-lg mb-4" id="res-total-score">0</div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-left text-sm border-t border-slate-700 pt-4">
+                            <div><span class="text-gray-500">Matches:</span> <span id="res-matches" class="text-white font-bold float-right">0</span></div>
+                            <div><span class="text-gray-500">Max Combo:</span> <span id="res-combo" class="text-yellow-400 font-bold float-right">x0</span></div>
+                            <div><span class="text-gray-500">Time:</span> <span id="res-time" class="text-cyan-400 font-bold float-right font-mono">00:00</span></div>
+                            <div><span class="text-gray-500">Mistakes:</span> <span id="res-mistakes" class="text-red-400 font-bold float-right">0</span></div>
+                        </div>
                     </div>
                     
-                    <div id="result-feedback" class="mb-8"></div>
-                    
-                    <button onclick="window.location.reload()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-4 px-6 rounded-xl transition text-lg">
-                        <i class="fa-solid fa-rotate-right mr-2"></i> กลับหน้าแรก
+                    <button onclick="window.location.reload()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white font-bold py-4 px-6 rounded-xl transition text-lg shadow-lg">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> เล่นใหม่อีกครั้ง
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- View 5: Leaderboard (Teacher) -->
+        <!-- View 6: Leaderboard (Teacher) -->
         <div id="view-scores" class="hidden animate-pop-in">
             <div class="glass-panel rounded-2xl p-6 md:p-8 border border-slate-700">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-700 pb-4 mb-6 gap-4">
                     <div>
-                        <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 uppercase tracking-wider">
+                        <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 uppercase tracking-wider">
                             <i class="fa-solid fa-ranking-star"></i> LEADERBOARD
                         </h2>
                         <h3 id="score-quiz-title" class="text-gray-400 font-semibold mt-1">Quest: -</h3>
                     </div>
-                    <button id="btn-back-to-quiz" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-4 py-2 rounded-lg transition text-sm font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-arrow-left"></i> BACK
+                    <button id="btn-back-to-lib" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-4 py-2 rounded-lg transition text-sm font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> กลับหน้าคลัง
                     </button>
                 </div>
                 
@@ -339,9 +414,11 @@
                     <table class="min-w-full bg-slate-800 text-left">
                         <thead class="bg-slate-900 text-gray-400 uppercase text-xs tracking-widest">
                             <tr>
-                                <th class="py-4 px-6 font-black border-b border-slate-700">Player Name</th>
-                                <th class="py-4 px-6 text-center font-black border-b border-slate-700">Score</th>
-                                <th class="py-4 px-6 text-right font-black border-b border-slate-700">Time Submitted</th>
+                                <th class="py-4 px-4 font-black border-b border-slate-700 w-16 text-center">Rank</th>
+                                <th class="py-4 px-4 font-black border-b border-slate-700">Player</th>
+                                <th class="py-4 px-4 text-right font-black border-b border-slate-700">Score</th>
+                                <th class="py-4 px-4 text-center font-black border-b border-slate-700 hidden md:table-cell">Time</th>
+                                <th class="py-4 px-4 text-center font-black border-b border-slate-700 hidden md:table-cell">Max Combo</th>
                             </tr>
                         </thead>
                         <tbody id="scores-table-body" class="divide-y divide-slate-700 text-white font-semibold">
@@ -351,7 +428,7 @@
                 </div>
                 <div id="no-scores-msg" class="hidden text-center text-slate-500 py-12">
                     <i class="fa-solid fa-ghost text-5xl mb-4 opacity-50"></i>
-                    <p class="text-lg">ยังไม่มี Player ทำภารกิจนี้สำเร็จ</p>
+                    <p class="text-lg">ยังไม่มีใครพิชิตด่านนี้ได้</p>
                 </div>
             </div>
         </div>
@@ -361,13 +438,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, addDoc, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, addDoc, serverTimestamp, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // 1. CONFIGURATION
-        // ==========================================
         const TEACHER_PASSWORD = "admin";
         const appId = 'matching-game-c02e0';
+        
         const firebaseConfig = {
             apiKey: "AIzaSyDo6GQWoeMIZsg_pBRDGi5tcdpbX_fbnYo",
             authDomain: "matching-game-c02e0.firebaseapp.com",
@@ -382,109 +457,79 @@
         const auth = getAuth(app);
         let currentUserId = null;
 
-        // ==========================================
-        // 2. AUDIO FX (Web Audio API - Synthesizer)
-        // ==========================================
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        function playTone(freq, type, duration, vol=0.1) {
+        function playTone(freq, type, duration, vol=0.1, slideFreq=null) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            if(slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, audioCtx.currentTime + duration);
             gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
         const sfx = {
-            select: () => playTone(600, 'sine', 0.1, 0.2),
-            match: () => { playTone(400, 'square', 0.1, 0.1); setTimeout(()=>playTone(800, 'square', 0.15, 0.1), 100); },
-            unmatch: () => { playTone(300, 'sawtooth', 0.1, 0.1); setTimeout(()=>playTone(200, 'sawtooth', 0.2, 0.1), 100); },
+            click: () => playTone(600, 'sine', 0.1, 0.1),
+            select: () => playTone(800, 'square', 0.1, 0.1),
+            match: () => { playTone(400, 'square', 0.1, 0.1, 800); setTimeout(()=>playTone(800, 'square', 0.15, 0.1, 1200), 100); },
+            unmatch: () => { playTone(300, 'sawtooth', 0.15, 0.1, 150); },
+            combo: (level) => { const base = 400 + (level * 100); playTone(base, 'triangle', 0.2, 0.1, base*1.5); },
             win: () => {
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-                    setTimeout(() => playTone(freq, 'sine', 0.4, 0.2), i * 150);
-                });
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, i) => setTimeout(() => playTone(freq, 'square', 0.2, 0.1), i * 120));
             }
         };
 
-        // ==========================================
-        // 3. GAME STATE & UI SETUP
-        // ==========================================
         let currentQuizData = null;
-        let createdQuizItems = [];
-        let gameMatches = {}; 
-        let selectedItemForMatch = { type: null, id: null, domElement: null }; 
+        let createdPairs = [];
+        // Structure for createdPairs: { id: string, a: {type: 'text'|'image', content: string}, b: {type: 'text'|'image', content: string} }
+        
+        // Game Engine State
+        let gameState = {
+            matches: {}, // key(sideA id) -> val(sideB id)
+            selected: { side: null, id: null, domElement: null },
+            totalPairs: 0,
+            matchedCount: 0,
+            startTime: 0,
+            timerInterval: null,
+            elapsedSeconds: 0,
+            mistakes: 0,
+            currentCombo: 1,
+            maxCombo: 1,
+            score: 0
+        };
 
-        // Gaming Neon Color Palette for matches
         const neonStyles = [
-            { border: 'border-pink-500', shadow: 'shadow-[0_0_20px_rgba(236,72,153,0.7)]', text: 'text-pink-400' },
-            { border: 'border-cyan-500', shadow: 'shadow-[0_0_20px_rgba(6,182,212,0.7)]', text: 'text-cyan-400' },
-            { border: 'border-green-500', shadow: 'shadow-[0_0_20px_rgba(34,197,94,0.7)]', text: 'text-green-400' },
-            { border: 'border-yellow-400', shadow: 'shadow-[0_0_20px_rgba(250,204,21,0.7)]', text: 'text-yellow-400' },
-            { border: 'border-purple-500', shadow: 'shadow-[0_0_20px_rgba(168,85,247,0.7)]', text: 'text-purple-400' },
-            { border: 'border-orange-500', shadow: 'shadow-[0_0_20px_rgba(249,115,22,0.7)]', text: 'text-orange-400' },
-            { border: 'border-blue-500', shadow: 'shadow-[0_0_20px_rgba(59,130,246,0.7)]', text: 'text-blue-400' },
-            { border: 'border-red-500', shadow: 'shadow-[0_0_20px_rgba(239,68,68,0.7)]', text: 'text-red-400' },
+            { border: 'border-[#ec4899]', shadow: 'shadow-[0_0_15px_rgba(236,72,153,0.6)]', text: 'text-[#ec4899]', bg: 'bg-[#ec4899]' }, // Pink
+            { border: 'border-[#06b6d4]', shadow: 'shadow-[0_0_15px_rgba(6,182,212,0.6)]', text: 'text-[#06b6d4]', bg: 'bg-[#06b6d4]' }, // Cyan
+            { border: 'border-[#22c55e]', shadow: 'shadow-[0_0_15px_rgba(34,197,94,0.6)]', text: 'text-[#22c55e]', bg: 'bg-[#22c55e]' }, // Green
+            { border: 'border-[#eab308]', shadow: 'shadow-[0_0_15px_rgba(234,179,8,0.6)]', text: 'text-[#eab308]', bg: 'bg-[#eab308]' }, // Yellow
+            { border: 'border-[#a855f7]', shadow: 'shadow-[0_0_15px_rgba(168,85,247,0.6)]', text: 'text-[#a855f7]', bg: 'bg-[#a855f7]' }, // Purple
+            { border: 'border-[#f97316]', shadow: 'shadow-[0_0_15px_rgba(249,115,22,0.6)]', text: 'text-[#f97316]', bg: 'bg-[#f97316]' }, // Orange
+            { border: 'border-[#3b82f6]', shadow: 'shadow-[0_0_15px_rgba(59,130,246,0.6)]', text: 'text-[#3b82f6]', bg: 'bg-[#3b82f6]' }, // Blue
         ];
 
         const ui = {
             loading: document.getElementById('loading-overlay'),
             views: {
                 teacherLogin: document.getElementById('view-teacher-login'),
-                teacher: document.getElementById('view-teacher'),
+                teacherLib: document.getElementById('view-teacher-lib'),
+                teacherCreate: document.getElementById('view-teacher-create'),
                 studentLogin: document.getElementById('view-student-login'),
                 game: document.getElementById('view-game'),
                 result: document.getElementById('view-result'),
                 scores: document.getElementById('view-scores')
             },
-            nav: { homeBtn: document.getElementById('btn-home') },
-            login: { passInput: document.getElementById('teacher-password'), btn: document.getElementById('btn-login-teacher') },
-            teacher: {
-                title: document.getElementById('quiz-title'),
-                imgInput: document.getElementById('item-image'),
-                imgPreviewContainer: document.getElementById('image-preview-container'),
-                imgPreview: document.getElementById('image-preview'),
-                meaningInput: document.getElementById('item-meaning'),
-                addBtn: document.getElementById('btn-add-item'),
-                list: document.getElementById('items-list'),
-                emptyMsg: document.getElementById('empty-list-msg'),
-                count: document.getElementById('item-count'),
-                saveBtn: document.getElementById('btn-save-quiz'),
-                shareSection: document.getElementById('share-section'),
-                shareLink: document.getElementById('share-link'),
-                copyBtn: document.getElementById('btn-copy-link'),
-                viewScoresBtn: document.getElementById('btn-view-scores-teacher')
-            },
-            player: {
-                title: document.getElementById('student-quiz-title'),
-                nameInput: document.getElementById('student-name'),
-                startBtn: document.getElementById('btn-start-game'),
-                displayName: document.getElementById('display-student-name'),
-                imgCol: document.getElementById('game-images-col'),
-                meaningCol: document.getElementById('game-meanings-col'),
-                submitBtn: document.getElementById('btn-submit-game'),
-                matchedCount: document.getElementById('pairs-matched'),
-                totalCount: document.getElementById('pairs-total'),
-                scoreResult: document.getElementById('score-result'),
-                scoreTotal: document.getElementById('score-total'),
-                feedback: document.getElementById('result-feedback')
-            },
-            scores: {
-                title: document.getElementById('score-quiz-title'),
-                tableBody: document.getElementById('scores-table-body'),
-                noScoresMsg: document.getElementById('no-scores-msg'),
-                backBtn: document.getElementById('btn-back-to-quiz')
+            nav: {
+                lib: document.getElementById('btn-lib-nav'),
+                create: document.getElementById('btn-create-nav')
             }
         };
 
-        // ==========================================
-        // 4. UTILS
-        // ==========================================
         function showAlert(title, message, isError = false) {
             const modal = document.getElementById('custom-alert');
             document.getElementById('alert-title').innerText = title;
@@ -492,78 +537,60 @@
             const icon = document.getElementById('alert-icon');
             
             if (isError) {
-                icon.className = 'fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-4 animate-bounce';
+                icon.className = 'fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-4 animate-shake';
                 document.getElementById('alert-title').classList.replace('text-white', 'text-red-400');
             } else {
                 icon.className = 'fa-solid fa-circle-check text-5xl text-cyan-400 mb-4 animate-pulse';
                 document.getElementById('alert-title').classList.replace('text-red-400', 'text-white');
             }
             modal.classList.remove('hidden');
-            sfx.unmatch(); // Error sound
+            if(isError) sfx.unmatch(); else sfx.click();
         }
 
         document.getElementById('alert-close').addEventListener('click', () => {
             document.getElementById('custom-alert').classList.add('hidden');
-            sfx.select();
+            sfx.click();
         });
 
         function showView(viewName) {
             Object.values(ui.views).forEach(v => v.classList.add('hidden'));
             ui.views[viewName].classList.remove('hidden');
-        }
-
-        function toggleLoading(show) {
-            if (show) ui.loading.classList.remove('hidden');
-            else setTimeout(() => ui.loading.classList.add('hidden'), 300); // Smooth hide
-        }
-
-        function generateId() { return Math.random().toString(36).substr(2, 9); }
-        function shuffleArray(array) {
-            let curId = array.length;
-            while (0 !== curId) {
-                let randId = Math.floor(Math.random() * curId); curId -= 1;
-                let tmp = array[curId]; array[curId] = array[randId]; array[randId] = tmp;
+            
+            // Nav logic
+            ui.nav.lib.classList.add('hidden');
+            ui.nav.create.classList.add('hidden');
+            if(viewName.startsWith('teacher') && viewName !== 'teacherLogin') {
+                if(viewName !== 'teacherLib') ui.nav.lib.classList.remove('hidden');
+                if(viewName !== 'teacherCreate') ui.nav.create.classList.remove('hidden');
             }
-            return array;
         }
+
+        function toggleLoading(show) { show ? ui.loading.classList.remove('hidden') : setTimeout(()=>ui.loading.classList.add('hidden'), 300); }
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+        function shuffleArray(array) { let cur = array.length; while(0!==cur){ let rand=Math.floor(Math.random()*cur); cur--; let tmp=array[cur]; array[cur]=array[rand]; array[rand]=tmp;} return array; }
+        function formatTime(seconds) { const m = Math.floor(seconds/60).toString().padStart(2,'0'); const s = (seconds%60).toString().padStart(2,'0'); return `${m}:${s}`; }
 
         function compressImage(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const MAX_WIDTH = 400; const MAX_HEIGHT = 400;
-                    let width = img.width; let height = img.height;
-                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
-                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-                    canvas.width = width; canvas.height = height;
-                    ctx.fillStyle = "#1e293b"; // Dark bg for transparent PNGs
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, width, height);
-                    callback(canvas.toDataURL('image/jpeg', 0.7)); 
-                }
-                img.src = e.target.result;
-            }
-            reader.readAsDataURL(file);
+                    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                    const MAX = 400; let w = img.width; let h = img.height;
+                    if(w>h) { if(w>MAX) {h*=MAX/w; w=MAX;} } else { if(h>MAX) {w*=MAX/h; h=MAX;} }
+                    canvas.width = w; canvas.height = h;
+                    ctx.fillStyle = "#1e293b"; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+                    callback(canvas.toDataURL('image/jpeg', 0.6)); 
+                }; img.src = e.target.result;
+            }; reader.readAsDataURL(file);
         }
 
-        // ==========================================
-        // 5. INITIALIZATION
-        // ==========================================
         async function initApp() {
             toggleLoading(true);
             try { await signInAnonymously(auth); } 
-            catch (error) {
-                console.error("Auth Error:", error);
-                showAlert("CONNECTION FAILED", "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", true);
-                toggleLoading(false); return;
-            }
+            catch (error) { showAlert("CONNECTION ERROR", "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์", true); toggleLoading(false); return; }
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) { currentUserId = user.uid; routeApp(); }
-            });
+            onAuthStateChanged(auth, async (user) => { if (user) { currentUserId = user.uid; routeApp(); } });
         }
 
         async function routeApp() {
@@ -573,356 +600,448 @@
             else { showView('teacherLogin'); toggleLoading(false); }
         }
 
-        // ==========================================
-        // 6. TEACHER LOGIC
-        // ==========================================
-        ui.login.btn.addEventListener('click', () => {
-            sfx.select();
-            if (ui.login.passInput.value === TEACHER_PASSWORD) {
-                ui.login.passInput.value = ''; showView('teacher');
+        window.addEventListener('DOMContentLoaded', initApp);
+
+        document.getElementById('btn-login-teacher').addEventListener('click', () => {
+            sfx.click();
+            if (document.getElementById('teacher-password').value === TEACHER_PASSWORD) {
+                document.getElementById('teacher-password').value = ''; 
+                loadTeacherLibrary(); 
             } else { showAlert("ACCESS DENIED", "รหัสผ่านไม่ถูกต้อง", true); }
         });
-        ui.login.passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') ui.login.btn.click(); });
+        document.getElementById('teacher-password').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('btn-login-teacher').click(); });
 
-        let currentBase64Image = null;
-        ui.teacher.imgInput.addEventListener('change', (e) => {
-            sfx.select();
-            const file = e.target.files[0];
-            if (file) {
-                if (!file.type.startsWith('image/')) { showAlert("INVALID FORMAT", "กรุณาเลือกไฟล์รูปภาพเท่านั้น", true); return; }
-                compressImage(file, (base64) => {
-                    currentBase64Image = base64;
-                    ui.teacher.imgPreview.src = base64;
-                    ui.teacher.imgPreviewContainer.classList.remove('hidden');
-                });
-            }
-        });
+        ui.nav.lib.addEventListener('click', () => { sfx.click(); loadTeacherLibrary(); });
+        ui.nav.create.addEventListener('click', () => { sfx.click(); showView('teacherCreate'); });
+        document.getElementById('btn-goto-create').addEventListener('click', () => { sfx.click(); showView('teacherCreate'); });
 
-        ui.teacher.addBtn.addEventListener('click', () => {
-            sfx.select();
-            const meaning = ui.teacher.meaningInput.value.trim();
-            if (!currentBase64Image) { showAlert("MISSING DATA", "กรุณาอัพโหลดรูปภาพ", true); return; }
-            if (!meaning) { showAlert("MISSING DATA", "กรุณาระบุความหมาย", true); return; }
-
-            createdQuizItems.push({ id: generateId(), image: currentBase64Image, meaning: meaning });
-            renderTeacherItems();
+        async function loadTeacherLibrary() {
+            showView('teacherLib'); toggleLoading(true);
+            const grid = document.getElementById('quiz-library-grid');
+            const emptyMsg = document.getElementById('empty-lib-msg');
+            grid.innerHTML = '';
             
-            ui.teacher.imgInput.value = ''; ui.teacher.meaningInput.value = ''; currentBase64Image = null;
-            ui.teacher.imgPreviewContainer.classList.add('hidden'); ui.teacher.meaningInput.focus();
+            try {
+                // Not using complex query to avoid index requirement errors. Fetch all and filter.
+                const qSnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'quizzes'));
+                const myQuizzes = [];
+                qSnapshot.forEach(doc => { const d = doc.data(); if(d.teacherId === currentUserId) myQuizzes.push({id: doc.id, ...d}); });
+                
+                myQuizzes.sort((a,b) => (b.createdAt?.toMillis()||0) - (a.createdAt?.toMillis()||0));
+
+                if(myQuizzes.length === 0) { emptyMsg.classList.remove('hidden'); }
+                else {
+                    emptyMsg.classList.add('hidden');
+                    myQuizzes.forEach(q => {
+                        const dateStr = q.createdAt ? new Date(q.createdAt.toDate()).toLocaleDateString('th-TH') : '';
+                        const card = document.createElement('div');
+                        card.className = "glass-panel rounded-xl p-5 border border-slate-600 hover:border-cyan-500 transition flex flex-col justify-between";
+                        card.innerHTML = `
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold text-white truncate pr-2">${q.title}</h3>
+                                    <span class="bg-slate-800 text-xs text-gray-400 px-2 py-1 rounded border border-slate-700 whitespace-nowrap">${dateStr}</span>
+                                </div>
+                                <p class="text-sm text-gray-400 mb-4"><i class="fa-solid fa-layer-group text-purple-400 mr-1"></i> ${q.items.length} Pairs</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mt-auto">
+                                <button onclick="copyQuizLink('${q.id}')" class="bg-slate-800 hover:bg-cyan-900 border border-slate-600 hover:border-cyan-500 text-white py-2 rounded-lg text-sm transition font-bold">
+                                    <i class="fa-solid fa-link"></i> Copy Link
+                                </button>
+                                <button onclick="viewScores('${q.id}', '${q.title}')" class="bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-sm transition font-bold shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                                    <i class="fa-solid fa-chart-simple"></i> Scores
+                                </button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            } catch (e) { console.error(e); showAlert("ERROR", "โหลดข้อมูลคลังล้มเหลว", true); }
+            finally { toggleLoading(false); }
+        }
+
+        window.copyQuizLink = function(quizId) {
+            sfx.click();
+            const url = `${window.location.origin}${window.location.pathname}?q=${quizId}`;
+            const tempInput = document.createElement("input"); tempInput.value = url; document.body.appendChild(tempInput);
+            tempInput.select(); document.execCommand("copy"); document.body.removeChild(tempInput);
+            showAlert("COPIED!", "คัดลอกลิงก์สำเร็จ นำไปส่งให้นักเรียนได้เลย");
+        }
+
+        window.viewScores = function(quizId, title) { sfx.click(); loadLeaderboard(quizId, title); }
+
+        let currentInput = { a: {type: 'text', content: null}, b: {type: 'text', content: null} };
+
+        // Handle Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                sfx.click();
+                const side = e.target.dataset.side; const type = e.target.dataset.type;
+                currentInput[side].type = type;
+                // Update buttons
+                document.querySelectorAll(`.tab-btn[data-side="${side}"]`).forEach(b => b.classList.remove('active', 'bg-cyan-500', 'text-black'));
+                e.target.classList.add('active'); e.target.style.backgroundColor = '#06b6d4'; e.target.style.color = 'black';
+                // Update content visibility
+                document.getElementById(`tab-${side}-text`).classList.remove('active');
+                document.getElementById(`tab-${side}-image`).classList.remove('active');
+                document.getElementById(`tab-${side}-${type}`).classList.add('active');
+            });
         });
 
-        function renderTeacherItems() {
-            ui.teacher.list.innerHTML = ''; ui.teacher.count.innerText = createdQuizItems.length;
-            if (createdQuizItems.length === 0) { ui.teacher.emptyMsg.classList.remove('hidden'); ui.teacher.list.appendChild(ui.teacher.emptyMsg); return; }
-            ui.teacher.emptyMsg.classList.add('hidden');
+        // Handle Image Uploads
+        ['a', 'b'].forEach(side => {
+            document.getElementById(`input-${side}-image`).addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(file && file.type.startsWith('image/')) {
+                    compressImage(file, (base64) => {
+                        currentInput[side].content = base64;
+                        document.getElementById(`preview-${side}-image`).src = base64;
+                        document.getElementById(`preview-${side}-image`).classList.remove('hidden');
+                    });
+                }
+            });
+        });
 
-            createdQuizItems.forEach((item, index) => {
+        document.getElementById('btn-add-pair').addEventListener('click', () => {
+            sfx.click();
+            // Collect Text data if active
+            ['a', 'b'].forEach(side => {
+                if(currentInput[side].type === 'text') {
+                    currentInput[side].content = document.getElementById(`input-${side}-text`).value.trim();
+                }
+            });
+
+            if(!currentInput.a.content || !currentInput.b.content) { showAlert("MISSING DATA", "กรุณาใส่ข้อมูลให้ครบทั้งสองฝั่ง", true); return; }
+
+            // Deep copy to save
+            createdPairs.push({
+                id: generateId(),
+                a: { type: currentInput.a.type, content: currentInput.a.content },
+                b: { type: currentInput.b.type, content: currentInput.b.content }
+            });
+
+            renderCreatedPairs();
+            
+            // Reset forms
+            ['a', 'b'].forEach(side => {
+                document.getElementById(`input-${side}-text`).value = '';
+                document.getElementById(`input-${side}-image`).value = '';
+                document.getElementById(`preview-${side}-image`).classList.add('hidden');
+                currentInput[side].content = null;
+            });
+        });
+
+        function renderCreatedPairs() {
+            const list = document.getElementById('items-list'); list.innerHTML = '';
+            document.getElementById('item-count').innerText = createdPairs.length;
+            if(createdPairs.length === 0) { document.getElementById('empty-list-msg').classList.remove('hidden'); return; }
+            document.getElementById('empty-list-msg').classList.add('hidden');
+
+            const renderContent = (data) => data.type === 'text' ? `<span class="text-sm truncate w-24">${data.content}</span>` : `<img src="${data.content}" class="w-10 h-10 object-cover rounded border border-slate-600">`;
+
+            createdPairs.forEach((pair, idx) => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between p-3 bg-slate-900 border border-slate-700 rounded-xl animate-pop-in";
                 div.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <span class="font-black text-slate-600 w-6">${index + 1}.</span>
-                        <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg border border-slate-600">
-                        <span class="font-bold text-white">${item.meaning}</span>
+                    <div class="flex items-center gap-3 w-full overflow-hidden pr-2">
+                        <span class="font-black text-slate-500 w-4">${idx+1}.</span>
+                        <div class="flex-1 bg-slate-800 p-2 rounded flex justify-center">${renderContent(pair.a)}</div>
+                        <i class="fa-solid fa-link text-cyan-500 text-xs"></i>
+                        <div class="flex-1 bg-slate-800 p-2 rounded flex justify-center">${renderContent(pair.b)}</div>
                     </div>
-                    <button class="text-red-500 hover:text-red-400 p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition" onclick="removeItem('${item.id}')"><i class="fa-solid fa-trash-can"></i></button>
+                    <button class="text-red-500 hover:text-red-400 p-2 ml-2" onclick="removePair('${pair.id}')"><i class="fa-solid fa-trash-can"></i></button>
                 `;
-                ui.teacher.list.appendChild(div);
+                list.appendChild(div);
             });
         }
+        window.removePair = (id) => { sfx.unmatch(); createdPairs = createdPairs.filter(p => p.id !== id); renderCreatedPairs(); };
 
-        window.removeItem = function(id) { sfx.unmatch(); createdQuizItems = createdQuizItems.filter(item => item.id !== id); renderTeacherItems(); }
-
-        ui.teacher.saveBtn.addEventListener('click', async () => {
-            sfx.select();
-            if (!currentUserId) return;
-            const title = ui.teacher.title.value.trim();
-            if (!title) { showAlert("MISSING DATA", "กรุณาตั้งชื่อด่านทดสอบ", true); ui.teacher.title.focus(); return; }
-            if (createdQuizItems.length < 2) { showAlert("NEED MORE DATA", "กรุณาเพิ่มข้อมูลอย่างน้อย 2 คู่", true); return; }
+        document.getElementById('btn-save-quiz').addEventListener('click', async () => {
+            sfx.click();
+            const title = document.getElementById('quiz-title').value.trim();
+            if(!title) { showAlert("MISSING DATA", "ตั้งชื่อด่านด้วยครับ", true); return; }
+            if(createdPairs.length < 2) { showAlert("NEED MORE", "ต้องมีอย่างน้อย 2 คู่", true); return; }
 
             toggleLoading(true);
             try {
                 const quizId = generateId() + generateId();
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId);
-                await setDoc(docRef, { teacherId: currentUserId, title: title, items: createdQuizItems, createdAt: serverTimestamp() });
-
-                const currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('q', quizId);
-                ui.teacher.shareLink.value = currentUrl.toString();
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId), {
+                    teacherId: currentUserId, title: title, items: createdPairs, createdAt: serverTimestamp()
+                });
                 
-                ui.teacher.shareSection.classList.remove('hidden');
-                ui.teacher.shareSection.classList.add('animate-pop-in');
-                ui.teacher.shareSection.scrollIntoView({ behavior: 'smooth' });
-                ui.teacher.viewScoresBtn.onclick = () => loadScoresForTeacher(quizId, title);
-                sfx.win(); // Happy sound for saving
-            } catch (error) {
-                console.error("Save Quiz Error:", error);
-                showAlert("DATABASE ERROR", "บันทึกไม่สำเร็จ ตรวจสอบ Rules ใน Firebase", true);
-            } finally { toggleLoading(false); }
+                const url = `${window.location.origin}${window.location.pathname}?q=${quizId}`;
+                document.getElementById('share-link').value = url;
+                document.getElementById('share-section').classList.remove('hidden');
+                document.getElementById('share-section').scrollIntoView({behavior: 'smooth'});
+                
+                // Reset creation state for next time
+                createdPairs = []; renderCreatedPairs(); document.getElementById('quiz-title').value = '';
+            } catch(e) { showAlert("DB ERROR", "บันทึกไม่ได้ ตรวจสอบ Rules", true); }
+            finally { toggleLoading(false); }
         });
 
-        ui.teacher.copyBtn.addEventListener('click', () => {
-            sfx.select();
-            ui.teacher.shareLink.select(); document.execCommand("copy");
-            const ogText = ui.teacher.copyBtn.innerHTML;
-            ui.teacher.copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> COPIED!';
-            ui.teacher.copyBtn.classList.replace('bg-blue-600', 'bg-green-500');
-            setTimeout(() => {
-                ui.teacher.copyBtn.innerHTML = ogText;
-                ui.teacher.copyBtn.classList.replace('bg-green-500', 'bg-blue-600');
-            }, 2000);
-        });
+        document.getElementById('btn-copy-link').addEventListener('click', () => { sfx.click(); document.getElementById('share-link').select(); document.execCommand("copy"); showAlert("COPIED!", "คัดลอกแล้ว"); });
 
-        // ==========================================
-        // 7. STUDENT / GAMEPLAY LOGIC
-        // ==========================================
         async function loadQuizForStudent(quizId) {
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    currentQuizData = docSnap.data(); currentQuizData.id = quizId;
-                    ui.player.title.innerText = currentQuizData.title;
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', quizId));
+                if(snap.exists()) {
+                    currentQuizData = {id: quizId, ...snap.data()};
+                    document.getElementById('student-quiz-title').innerText = currentQuizData.title;
                     showView('studentLogin');
-                } else { showAlert("QUEST NOT FOUND", "ลิงก์ไม่ถูกต้อง หรือถูกลบไปแล้ว", true); }
-            } catch (error) { showAlert("SYSTEM ERROR", "โหลดข้อมูลไม่สำเร็จ", true); } 
+                } else { showAlert("NOT FOUND", "ลิงก์ภารกิจไม่ถูกต้อง", true); }
+            } catch(e) { showAlert("ERROR", "โหลดด่านล้มเหลว", true); }
             finally { toggleLoading(false); }
         }
 
-        ui.player.startBtn.addEventListener('click', () => {
-            sfx.select();
-            const studentName = ui.player.nameInput.value.trim();
-            if (!studentName) { showAlert("WARNING", "กรุณากรอกชื่อ Player", true); return; }
-            ui.player.displayName.innerText = studentName;
-            
-            // Required to unlock AudioContext on mobile
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            const name = document.getElementById('student-name').value.trim();
+            if(!name) { showAlert("WARNING", "ใส่ชื่อ Player ก่อนลุย!", true); return; }
+            document.getElementById('display-student-name').innerText = name;
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            
-            initGameEngine(); showView('game');
+            sfx.win(); // start sound
+            startGame();
+            showView('game');
         });
 
-        let gameShuffledImages = []; let gameShuffledMeanings = [];
-
-        function initGameEngine() {
-            gameMatches = {}; selectedItemForMatch = { type: null, id: null, domElement: null };
-            updateSubmitButton();
-            ui.player.totalCount.innerText = currentQuizData.items.length; ui.player.matchedCount.innerText = "0";
-
-            let itemsForImg = currentQuizData.items.map(item => ({ id: item.id, image: item.image }));
-            let itemsForMeaning = currentQuizData.items.map(item => ({ id: item.id, meaning: item.meaning }));
-
-            gameShuffledImages = shuffleArray([...itemsForImg]);
-            gameShuffledMeanings = shuffleArray([...itemsForMeaning]);
-
-            renderGameBoard();
-        }
-
-        function renderGameBoard() {
-            ui.player.imgCol.innerHTML = ''; ui.player.meaningCol.innerHTML = '';
-
-            gameShuffledImages.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "match-card p-2 rounded-xl flex items-center justify-center h-28 md:h-36 cursor-pointer";
-                div.id = `img-card-${item.id}`;
-                div.innerHTML = `<img src="${item.image}" class="max-h-full max-w-full object-contain rounded-lg pointer-events-none drop-shadow-lg">`;
-                div.onclick = () => handleGameSelection('image', item.id, div);
-                ui.player.imgCol.appendChild(div);
-            });
-
-            gameShuffledMeanings.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "match-card p-4 rounded-xl flex items-center justify-center h-28 md:h-36 text-center cursor-pointer";
-                div.id = `text-card-${item.id}`;
-                div.innerHTML = `<span class="font-bold text-gray-200 text-sm md:text-lg pointer-events-none">${item.meaning}</span>`;
-                div.onclick = () => handleGameSelection('meaning', item.id, div);
-                ui.player.meaningCol.appendChild(div);
-            });
-        }
-
-        function handleGameSelection(type, id, domElement) {
-            if (isItemAlreadyMatched(type, id)) { unmatchItem(type, id); return; }
-            if (selectedItemForMatch.type === type && selectedItemForMatch.id === id) { clearSelection(); return; }
-            if (selectedItemForMatch.type === type) { clearSelection(); selectItem(type, id, domElement); return; }
-            if (!selectedItemForMatch.type) { selectItem(type, id, domElement); return; }
-            createMatch(type, id, domElement);
-        }
-
-        function selectItem(type, id, domElement) {
-            sfx.select();
-            selectedItemForMatch = { type, id, domElement };
-            domElement.classList.add('selected-card');
-        }
-
-        function clearSelection() {
-            if (selectedItemForMatch.domElement) selectedItemForMatch.domElement.classList.remove('selected-card');
-            selectedItemForMatch = { type: null, id: null, domElement: null };
-        }
-
-        function createMatch(secondType, secondId, secondDomElement) {
-            sfx.match(); // Play success sound
+        function startGame() {
+            // Reset State
+            gameState = {
+                matches: {}, selected: {side: null, id: null, el: null},
+                totalPairs: currentQuizData.items.length, matchedCount: 0,
+                startTime: Date.now(), timerInterval: null, elapsedSeconds: 0,
+                mistakes: 0, currentCombo: 1, maxCombo: 1, score: 0
+            };
             
-            const firstType = selectedItemForMatch.type; const firstId = selectedItemForMatch.id; const firstDomElement = selectedItemForMatch.domElement;
-            let imageId = firstType === 'image' ? firstId : secondId; let meaningId = firstType === 'meaning' ? firstId : secondId;
-            gameMatches[imageId] = meaningId;
-            
-            const style = neonStyles[Object.keys(gameMatches).length % neonStyles.length];
-            
-            [firstDomElement, secondDomElement].forEach(el => {
-                el.classList.remove('selected-card', 'border-[#334155]');
-                el.classList.add(style.border, style.shadow, 'animate-pop-in');
-                // Dim background slightly to pop border
-                el.style.background = 'rgba(15, 23, 42, 0.8)';
-                el.dataset.matchStyle = JSON.stringify(style);
+            updateHUD();
+            document.getElementById('btn-submit-game').classList.add('hidden');
+            document.getElementById('progress-bar').style.width = '0%';
+
+            // Prepare Data Arrays (Split Side A and Side B, keeping original IDs to match later)
+            let arrA = currentQuizData.items.map(item => ({ id: item.id, data: item.a }));
+            let arrB = currentQuizData.items.map(item => ({ id: item.id, data: item.b }));
+
+            arrA = shuffleArray(arrA);
+            arrB = shuffleArray(arrB);
+
+            renderGameCards(arrA, 'a', 'game-col-a');
+            renderGameCards(arrB, 'b', 'game-col-b');
+
+            // Start Timer
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                gameState.elapsedSeconds = Math.floor((Date.now() - gameState.startTime)/1000);
+                document.getElementById('hud-time').innerText = formatTime(gameState.elapsedSeconds);
+            }, 1000);
+        }
+
+        function renderGameCards(arr, sideLabel, containerId) {
+            const container = document.getElementById(containerId); container.innerHTML = '';
+            arr.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "match-card p-3 rounded-xl flex items-center justify-center h-28 md:h-36 cursor-pointer transform transition shadow-md";
+                card.id = `card-${sideLabel}-${item.id}`;
                 
-                // Add icon indicating matched state
-                if(!el.querySelector('.match-indicator')) {
-                    const icon = document.createElement('i');
-                    icon.className = `fa-solid fa-link absolute top-2 right-2 text-xs opacity-70 match-indicator ${style.text}`;
-                    el.appendChild(icon);
+                if(item.data.type === 'image') {
+                    card.innerHTML = `<img src="${item.data.content}" class="max-h-full max-w-full object-contain rounded pointer-events-none drop-shadow-md">`;
+                } else {
+                    card.innerHTML = `<span class="font-bold text-gray-200 text-sm md:text-base pointer-events-none text-center break-words w-full px-2">${item.data.content}</span>`;
                 }
-            });
-
-            clearSelection(); updateSubmitButton();
-        }
-
-        function isItemAlreadyMatched(type, id) {
-            return type === 'image' ? gameMatches.hasOwnProperty(id) : Object.values(gameMatches).includes(id);
-        }
-
-        function unmatchItem(type, id) {
-            sfx.unmatch();
-            let imgIdToRemove = null; let textIdToRemove = null;
-            if (type === 'image') { imgIdToRemove = id; textIdToRemove = gameMatches[id]; } 
-            else { textIdToRemove = id; imgIdToRemove = Object.keys(gameMatches).find(k => gameMatches[k] === id); }
-
-            if (imgIdToRemove && textIdToRemove) {
-                delete gameMatches[imgIdToRemove];
                 
-                const resetElement = (dom) => {
-                    if(!dom) return;
-                    if(dom.dataset.matchStyle) {
-                        const style = JSON.parse(dom.dataset.matchStyle);
-                        dom.classList.remove(style.border, style.shadow, 'animate-pop-in');
-                        delete dom.dataset.matchStyle;
-                    }
-                    dom.style.background = '';
-                    dom.classList.add('border-[#334155]');
-                    const indicator = dom.querySelector('.match-indicator');
-                    if(indicator) indicator.remove();
-                };
-
-                resetElement(document.getElementById(`img-card-${imgIdToRemove}`));
-                resetElement(document.getElementById(`text-card-${textIdToRemove}`));
-                updateSubmitButton();
-            }
+                card.onclick = () => handleCardClick(sideLabel, item.id, card);
+                container.appendChild(card);
+            });
         }
 
-        function updateSubmitButton() {
-            const matchedPairs = Object.keys(gameMatches).length; const totalPairs = currentQuizData.items.length;
-            ui.player.matchedCount.innerText = matchedPairs;
-            if (matchedPairs === totalPairs) {
-                ui.player.submitBtn.disabled = false; ui.player.submitBtn.classList.add('animate-pulse-glow');
-                if(matchedPairs > 0) sfx.win(); // Little preview win sound
-            } else {
-                ui.player.submitBtn.disabled = true; ui.player.submitBtn.classList.remove('animate-pulse-glow');
-            }
-        }
-
-        // ==========================================
-        // 8. RESULT & DB SUBMIT
-        // ==========================================
-        ui.player.submitBtn.addEventListener('click', async () => {
-            sfx.select();
-            if (!currentUserId) return;
-            toggleLoading(true);
+        function handleCardClick(side, id, el) {
+            if(el.classList.contains('matched-card')) return; // Already matched
             
-            let score = 0; const total = currentQuizData.items.length;
-            for (const [imgId, meaningId] of Object.entries(gameMatches)) { if (imgId === meaningId) score++; }
+            const sel = gameState.selected;
 
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'scores'), {
-                    quizId: currentQuizData.id, quizTitle: currentQuizData.title,
-                    studentName: ui.player.nameInput.value.trim(),
-                    score: score, total: total, submittedAt: serverTimestamp()
+            // Click same card -> Deselect
+            if(sel.side === side && sel.id === id) { deselect(); return; }
+            
+            // Click same side different card -> Switch selection
+            if(sel.side === side) { deselect(); selectCard(side, id, el); return; }
+
+            // Click first card
+            if(!sel.side) { selectCard(side, id, el); return; }
+
+            // Click opposite side -> Check Match!
+            checkMatch(sel.side, sel.id, side, id, sel.el, el);
+        }
+
+        function selectCard(side, id, el) {
+            sfx.select();
+            gameState.selected = { side, id, el };
+            el.classList.add('selected-card');
+        }
+
+        function deselect() {
+            if(gameState.selected.el) gameState.selected.el.classList.remove('selected-card');
+            gameState.selected = {side: null, id: null, el: null};
+        }
+
+        function checkMatch(side1, id1, side2, id2, el1, el2) {
+            // IDs are the same if they belong to the same original pair
+            if(id1 === id2) {
+                // CORRECT MATCH
+                sfx.match();
+                gameState.matchedCount++;
+                gameState.score += (1000 * gameState.currentCombo);
+                
+                // Visuals
+                const style = neonStyles[gameState.matchedCount % neonStyles.length];
+                [el1, el2].forEach(el => {
+                    el.classList.remove('selected-card', 'border-slate-500');
+                    el.classList.add('matched-card', style.border, style.bg, 'bg-opacity-20');
+                    el.innerHTML += `<div class="absolute inset-0 border-2 ${style.border} rounded-xl animate-ping opacity-20"></div>`;
                 });
 
-                ui.player.scoreResult.innerText = score; ui.player.scoreTotal.innerText = total;
-                const percentage = (score / total) * 100;
-                let feedbackText = ""; let colorClass = ""; let icon = "";
+                // Combo System
+                if(gameState.currentCombo > 1) sfx.combo(gameState.currentCombo);
+                gameState.currentCombo++;
+                if(gameState.currentCombo > gameState.maxCombo) gameState.maxCombo = gameState.currentCombo;
                 
-                if (percentage === 100) { feedbackText = "GODLIKE! ไร้ที่ติ"; colorClass="text-yellow-400"; icon="fa-crown"; }
-                else if (percentage >= 70) { feedbackText = "EXCELLENT! ยอดเยี่ยม"; colorClass="text-cyan-400"; icon="fa-star"; }
-                else if (percentage >= 50) { feedbackText = "CLEAR! ผ่านด่านแล้ว"; colorClass="text-green-400"; icon="fa-check-circle"; }
-                else { feedbackText = "MISSION FAILED! สู้ใหม่นะ"; colorClass="text-red-500"; icon="fa-skull"; }
+            } else {
+                // INCORRECT MATCH
+                sfx.unmatch();
+                gameState.mistakes++;
+                gameState.score = Math.max(0, gameState.score - 500); // Penalty
+                gameState.currentCombo = 1; // Break combo
                 
-                ui.player.feedback.innerHTML = `<div class="${colorClass} font-black text-2xl tracking-wider uppercase"><i class="fa-solid ${icon} mr-2"></i>${feedbackText}</div>`;
-                
-                showView('result');
-                
-                // WIN EFFECTS
-                sfx.win();
-                if(percentage >= 50 && typeof confetti === 'function') {
-                    const duration = 3 * 1000;
-                    const animationEnd = Date.now() + duration;
-                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
-                    function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-                    const interval = setInterval(function() {
-                        const timeLeft = animationEnd - Date.now();
-                        if (timeLeft <= 0) return clearInterval(interval);
-                        const particleCount = 50 * (timeLeft / duration);
-                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-                    }, 250);
-                }
+                // Visuals
+                [el1, el2].forEach(el => {
+                    el.classList.remove('selected-card');
+                    el.classList.add('border-red-500', 'animate-shake', 'bg-red-900', 'bg-opacity-30');
+                    setTimeout(() => {
+                        el.classList.remove('border-red-500', 'animate-shake', 'bg-red-900', 'bg-opacity-30');
+                    }, 500);
+                });
+            }
 
-            } catch (error) { showAlert("ERROR", "ส่งข้อมูลไม่สำเร็จ", true); } 
+            deselect(); updateHUD(); checkWinCondition();
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-score').innerText = gameState.score.toLocaleString();
+            document.getElementById('hud-mistakes').innerText = gameState.mistakes;
+            
+            const comboEl = document.getElementById('combo-display');
+            document.getElementById('hud-combo').innerText = gameState.currentCombo;
+            if(gameState.currentCombo > 2) {
+                comboEl.classList.add('text-yellow-400', 'animate-fire');
+                comboEl.classList.remove('text-slate-600');
+            } else {
+                comboEl.classList.remove('text-yellow-400', 'animate-fire');
+                comboEl.classList.add('text-slate-600');
+            }
+
+            const progress = (gameState.matchedCount / gameState.totalPairs) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        function checkWinCondition() {
+            if(gameState.matchedCount === gameState.totalPairs) {
+                clearInterval(gameState.timerInterval);
+                sfx.win();
+                
+                // Time Bonus calculation (e.g., target 5 secs per pair)
+                const targetTime = gameState.totalPairs * 5;
+                const timeBonus = Math.max(0, (targetTime - gameState.elapsedSeconds) * 100);
+                gameState.score += timeBonus;
+                updateHUD();
+
+                const btn = document.getElementById('btn-submit-game');
+                btn.classList.remove('hidden'); btn.disabled = false;
+                
+                // Auto scroll to submit
+                setTimeout(()=>btn.scrollIntoView({behavior: 'smooth', block: 'center'}), 500);
+            }
+        }
+
+        document.getElementById('btn-submit-game').addEventListener('click', async () => {
+            sfx.click(); toggleLoading(true);
+            try {
+                const finalData = {
+                    quizId: currentQuizData.id,
+                    studentName: document.getElementById('student-name').value.trim(),
+                    score: gameState.score,
+                    timeSeconds: gameState.elapsedSeconds,
+                    mistakes: gameState.mistakes,
+                    maxCombo: gameState.maxCombo,
+                    submittedAt: serverTimestamp()
+                };
+                
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'scores'), finalData);
+                
+                // Populate Result Screen
+                document.getElementById('res-total-score').innerText = gameState.score.toLocaleString();
+                document.getElementById('res-matches').innerText = `${gameState.matchedCount}/${gameState.totalPairs}`;
+                document.getElementById('res-combo').innerText = `x${gameState.maxCombo}`;
+                document.getElementById('res-time').innerText = formatTime(gameState.elapsedSeconds);
+                document.getElementById('res-mistakes').innerText = gameState.mistakes;
+
+                showView('result');
+                fireConfetti();
+                
+            } catch(e) { showAlert("ERROR", "ส่งข้อมูลไม่สำเร็จ", true); }
             finally { toggleLoading(false); }
         });
 
-        // ==========================================
-        // 9. TEACHER DASHBOARD
-        // ==========================================
-        async function loadScoresForTeacher(quizId, quizTitle) {
-            sfx.select();
-            if (!currentUserId) return;
-            toggleLoading(true);
-            ui.scores.title.innerText = `Quest: ${quizTitle}`; ui.scores.tableBody.innerHTML = '';
+        function fireConfetti() {
+            if(typeof confetti !== 'function') return;
+            const duration = 3000; const end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#06b6d4', '#a855f7'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#facc15', '#ec4899'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        async function loadLeaderboard(quizId, quizTitle) {
+            showView('scores'); toggleLoading(true);
+            document.getElementById('score-quiz-title').innerText = `Quest: ${quizTitle}`;
+            const tbody = document.getElementById('scores-table-body'); tbody.innerHTML = '';
             
             try {
-                const querySnapshot = await getDocs(query(collection(db, 'artifacts', appId, 'public', 'data', 'scores')));
-                const scores = [];
-                querySnapshot.forEach(doc => { const d = doc.data(); if(d.quizId === quizId) scores.push(d); });
-                scores.sort((a, b) => (b.submittedAt?.toMillis() || 0) - (a.submittedAt?.toMillis() || 0));
+                const qSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'scores'));
+                let scores = [];
+                qSnap.forEach(doc => { const d=doc.data(); if(d.quizId === quizId) scores.push(d); });
+                
+                // Sort by Score DESC, then Time ASC
+                scores.sort((a,b) => {
+                    if(b.score !== a.score) return b.score - a.score;
+                    return a.timeSeconds - b.timeSeconds;
+                });
 
-                if (scores.length === 0) { ui.scores.noScoresMsg.classList.remove('hidden'); } 
+                if(scores.length === 0) document.getElementById('no-scores-msg').classList.remove('hidden');
                 else {
-                    ui.scores.noScoresMsg.classList.add('hidden');
-                    scores.forEach(s => {
-                        const tr = document.createElement('tr'); tr.className = "hover:bg-slate-700/50 transition";
-                        const dateStr = s.submittedAt ? new Date(s.submittedAt.toDate()).toLocaleString('th-TH') : 'UNKNOWN';
-                        const perc = (s.score / s.total) * 100;
-                        let badge = "border-red-500 text-red-400";
-                        if (perc === 100) badge = "border-yellow-400 text-yellow-400 bg-yellow-900/30";
-                        else if (perc >= 50) badge = "border-cyan-500 text-cyan-400";
+                    document.getElementById('no-scores-msg').classList.add('hidden');
+                    scores.forEach((s, idx) => {
+                        let rankIcon = `<span class="text-gray-400 font-mono">${idx+1}</span>`;
+                        if(idx===0) rankIcon = `<i class="fa-solid fa-medal text-yellow-400 text-xl drop-shadow"></i>`;
+                        else if(idx===1) rankIcon = `<i class="fa-solid fa-medal text-slate-300 text-lg drop-shadow"></i>`;
+                        else if(idx===2) rankIcon = `<i class="fa-solid fa-medal text-orange-400 text-lg drop-shadow"></i>`;
 
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-700/50 transition border-b border-slate-700/50";
                         tr.innerHTML = `
-                            <td class="py-4 px-6 border-b border-slate-700 font-bold">${s.studentName}</td>
-                            <td class="py-4 px-6 border-b border-slate-700 text-center">
-                                <span class="px-3 py-1 border rounded-full text-xs font-black shadow-sm ${badge}">${s.score} / ${s.total}</span>
-                            </td>
-                            <td class="py-4 px-6 border-b border-slate-700 text-right text-sm text-gray-400 font-mono">${dateStr}</td>
+                            <td class="py-4 px-4 text-center">${rankIcon}</td>
+                            <td class="py-4 px-4 font-bold text-cyan-100">${s.studentName}</td>
+                            <td class="py-4 px-4 text-right font-black text-yellow-400">${s.score.toLocaleString()}</td>
+                            <td class="py-4 px-4 text-center text-cyan-400 font-mono hidden md:table-cell">${formatTime(s.timeSeconds)}</td>
+                            <td class="py-4 px-4 text-center text-purple-400 font-bold hidden md:table-cell">x${s.maxCombo}</td>
                         `;
-                        ui.scores.tableBody.appendChild(tr);
+                        tbody.appendChild(tr);
                     });
                 }
-                showView('scores');
-            } catch (error) { showAlert("ERROR", "โหลดข้อมูลล้มเหลว", true); } 
+            } catch(e) { showAlert("ERROR", "โหลดข้อมูลคะแนนล้มเหลว", true); }
             finally { toggleLoading(false); }
         }
 
-        ui.scores.backBtn.addEventListener('click', () => { sfx.select(); showView('teacher'); ui.teacher.shareSection.scrollIntoView({ behavior: 'smooth' }); });
+        document.getElementById('btn-back-to-lib').addEventListener('click', () => { sfx.click(); showView('teacherLib'); });
 
-        window.addEventListener('DOMContentLoaded', () => initApp());
     </script>
 </body>
 </html>
